@@ -1,0 +1,115 @@
+{
+  "background_color": "#0c0e12",
+  "description": "A premium cryptocurrency reward platform where users earn BTC, BNB, SOL, XRP, and BULLFI through faucets, PTC ads, offers, and yield farming.",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "BullFaucet",
+  "orientation": "portrait",
+  "scope": "/",
+  "short_name": "BullFaucet",
+  "start_url": "/",
+  "theme_color": "#0c0e12",
+  "icons": [
+    {
+      "src": "icons/android/android-launchericon-192-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/android/android-launchericon-512-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/ios/180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/ios/167.png",
+      "sizes": "167x167",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/ios/152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/ios/120.png",
+      "sizes": "120x120",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/ios/1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/windows11/Square150x150Logo.scale-100.png",
+      "sizes": "150x150",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/windows11/Square44x44Logo.targetsize-256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/android/android-launchericon-144-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/android/android-launchericon-96-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "lang": "en",
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.coinpayu.earn.bitcoin",
+      "id": "com.coinpayu.earn.bitcoin"
+    },
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.freecash.app2",
+      "id": "com.freecash.app2"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Games & Offers",
+      "url": "/offerwall",
+      "description": "Browse the available games and offers and start one now."
+    },
+    {
+      "name": "Surveys",
+      "url": "/surveys",
+      "description": "Check if a survey is available for you to quickly complete it and earn reward."
+    },
+    {
+      "name": "PTC",
+      "url": "/tasks",
+      "description": "ADs are always available. Start viewing ads to earn reward."
+    },
+    {
+      "name": "Faucet Spin",
+      "url": "/faucet-claim",
+      "description": "Spin and claim up to 5 Million BULLFI every 30 minutes."
+    }
+  ]
+}
