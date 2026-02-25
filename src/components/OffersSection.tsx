@@ -10,14 +10,13 @@ import { useData } from '../contexts/DataContext';
 import OfferDetailModal from './OfferDetailModal';
 import { SingleSurvey } from './SurveyDisplay';
 
-// Provider logo mapping for fallbacks
+// Provider logo mapping for fallbacks - removed Featured
 const PROVIDER_LOGOS: Record<string, string> = {
   'BitLabs': 'https://res.cloudinary.com/danuehpic/image/upload/v1771932037/bitlabs_uumted.png',
   'CPX': 'https://res.cloudinary.com/danuehpic/image/upload/v1771932038/cpx_ucbnon.png',
   'Wannads': 'https://res.cloudinary.com/danuehpic/image/upload/v1771932038/wannads_ppwygk.png',
   'Adscend': 'https://res.cloudinary.com/danuehpic/image/upload/v1771932037/adscend_qensby.png',
   'Notik': 'https://res.cloudinary.com/danuehpic/image/upload/v1771932038/notik_iv5krg.png',
-  'Featured': '/default-offer.png',
   'default': '/default-offer.png'
 };
 
@@ -44,8 +43,6 @@ const OffersSection: React.FC<OffersSectionProps> = ({ onComplete }) => {
     wannadsLoading,
     adscendOffers,
     adscendLoading,
-    featuredOffers,
-    featuredOffersLoading,
     surveys,
     cpxLoading,
     bitlabsSurveys,
@@ -54,7 +51,6 @@ const OffersSection: React.FC<OffersSectionProps> = ({ onComplete }) => {
     fetchNotikOffers,
     fetchWannadsOffers,
     fetchAdscendOffers,
-    fetchFeaturedOffers,
     fetchBitLabsSurveys,
     setBitlabsLoading,
     setNotikLoading,
@@ -107,7 +103,7 @@ const OffersSection: React.FC<OffersSectionProps> = ({ onComplete }) => {
     };
   }, [getRewardMultiplier]);
 
-  // Transform offers with multiplier and source identification
+  // Transform offers with multiplier and source identification - removed featuredOffers
   const transformedOffers = useMemo(() => {
     const allOffers: any[] = [];
 
@@ -215,33 +211,8 @@ const OffersSection: React.FC<OffersSectionProps> = ({ onComplete }) => {
       });
     }
 
-    // Add featured offers as fallback
-    if (featuredOffers?.length) {
-      featuredOffers.forEach((offer: any) => {
-        const payoutCalc = calculateActualPayout(offer.payout || 0);
-        allOffers.push({
-          ...offer,
-          id: `featured-${offer.id}`,
-          title: offer.name || offer.title,
-          description: offer.description || '',
-          reward_usd: payoutCalc.actualPayout,
-          originalReward: payoutCalc.basePayout,
-          multiplier: payoutCalc.multiplier,
-          provider: 'Featured',
-          type: offer.type || 'Offer',
-          image_url: offer.image_url || getProviderLogo('Featured'),
-          click_url: offer.click_url,
-          difficulty: getDifficultyFromReward(payoutCalc.actualPayout),
-          icon: offer.icon || getProviderLogo('Featured'),
-          source: 'Featured',
-          category: 'offer',
-          providerLogo: getProviderLogo('Featured')
-        });
-      });
-    }
-
     return allOffers;
-  }, [bitlabsOffers, notikOffers, wannadsOffers, adscendOffers, featuredOffers, calculateActualPayout]);
+  }, [bitlabsOffers, notikOffers, wannadsOffers, adscendOffers, calculateActualPayout]);
 
   // Transform surveys with multiplier
   const transformedSurveys = useMemo(() => {
@@ -375,9 +346,9 @@ const OffersSection: React.FC<OffersSectionProps> = ({ onComplete }) => {
     return filtered;
   }, [randomizedItems, sourceFilter, typeFilter, user?.startedOffers]);
 
-  // Loading timeout effect
+  // Loading timeout effect - removed featuredOffersLoading
   useEffect(() => {
-    const anyLoading = bitlabsLoading || notikLoading || wannadsLoading || adscendLoading || featuredOffersLoading || cpxLoading || bitlabsSurveyLoading;
+    const anyLoading = bitlabsLoading || notikLoading || wannadsLoading || adscendLoading || cpxLoading || bitlabsSurveyLoading;
     
     if (anyLoading) {
       const timeoutId = setTimeout(() => {
@@ -392,15 +363,14 @@ const OffersSection: React.FC<OffersSectionProps> = ({ onComplete }) => {
     } else {
       setLoadingTimeout(false);
     }
-  }, [bitlabsLoading, notikLoading, wannadsLoading, adscendLoading, featuredOffersLoading, cpxLoading, bitlabsSurveyLoading]);
+  }, [bitlabsLoading, notikLoading, wannadsLoading, adscendLoading, cpxLoading, bitlabsSurveyLoading]);
 
-  // Fetch data on mount
+  // Fetch data on mount - removed fetchFeaturedOffers
   useEffect(() => {
     fetchBitlabsOffers();
     fetchNotikOffers();
     fetchWannadsOffers();
     fetchAdscendOffers();
-    fetchFeaturedOffers();
     fetchBitLabsSurveys();
   }, []);
 
@@ -438,7 +408,7 @@ const OffersSection: React.FC<OffersSectionProps> = ({ onComplete }) => {
     label: source === 'all' ? 'All Providers' : source
   }));
 
-  const isLoading = bitlabsLoading || notikLoading || wannadsLoading || adscendLoading || featuredOffersLoading || cpxLoading || bitlabsSurveyLoading;
+  const isLoading = bitlabsLoading || notikLoading || wannadsLoading || adscendLoading || cpxLoading || bitlabsSurveyLoading;
 
   // Difficulty badge colors
   const getDifficultyColor = (difficulty: string) => {
