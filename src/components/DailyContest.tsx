@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Gift, Trophy, Medal, Clock, TrendingUp, Users } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import { ContestParticipant, ContestWinner } from '../types';
+import fallbackCountries from '../fallbackCountries.json'; 
 
 export const DailyContest = () => {
   const { 
@@ -16,22 +17,14 @@ export const DailyContest = () => {
   } = useData();
   
   const [timeLeft, setTimeLeft] = useState('');
-  const [countries, setCountries] = useState<Array<{ name: string; flag: string }>>([]);
+  
+  // Process countries data once at the component level
+  const countries = fallbackCountries.map((country: any) => ({
+    name: country.country,
+    flag: country.flag_base64
+  })).sort((a, b) => a.name.localeCompare(b.name));
 
   const prizePercentages = [50, 25, 12, 6, 3, 1.5, 0.9, 0.7, 0.5, 0.4];
-
-  // Load countries from fallback
-  useEffect(() => {
-    import('../fallbackCountries.json').then((module) => {
-      const formattedCountries = module.default.map((country: any) => ({
-        name: country.country,
-        flag: country.flag_base64
-      })).sort((a, b) => a.name.localeCompare(b.name));
-      setCountries(formattedCountries);
-    }).catch(error => {
-      console.error("Error loading countries:", error);
-    });
-  }, []);
 
   useEffect(() => {
     const calculateTimeLeft = () => {
@@ -54,7 +47,7 @@ export const DailyContest = () => {
 
   const getCountryFlag = (countryName?: string) => {
     if (!countryName) return null;
-    const country = countries?.find(c => 
+    const country = countries.find(c => 
       c.name.toLowerCase() === countryName?.toLowerCase()
     );
     return country?.flag || null;

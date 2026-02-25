@@ -56,7 +56,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   prices, 
   balance
 }) => {
-  const { dailyActivity, tokenPrice, bitcoinPrice, solanaPrice, binancePrice, ripplePrice, } = useData();
+  const { dailyActivity, tokenPrice, bitcoinPrice, solanaPrice, binancePrice, ripplePrice } = useData();
   const [isPendingModalOpen, setIsPendingModalOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   
