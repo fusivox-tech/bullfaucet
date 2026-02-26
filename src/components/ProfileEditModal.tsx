@@ -27,8 +27,16 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [localSelectedFlag, setLocalSelectedFlag] = useState(selectedFlag);
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
+  const [isGenderDropdownOpen, setIsGenderDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const countryDropdownRef = useRef<HTMLDivElement>(null);
+  const genderDropdownRef = useRef<HTMLDivElement>(null);
+
+  const genderOptions = [
+    { value: 'Male', label: 'Male' },
+    { value: 'Female', label: 'Female' },
+    { value: 'Other', label: 'Other' },
+  ];
 
   // Initialize form data
   useEffect(() => {
@@ -51,11 +59,14 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
     }
   }, [user, countries]);
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(event.target as Node)) {
         setIsCountryDropdownOpen(false);
+      }
+      if (genderDropdownRef.current && !genderDropdownRef.current.contains(event.target as Node)) {
+        setIsGenderDropdownOpen(false);
       }
     };
 
@@ -64,8 +75,14 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
   }, []);
 
   // Handle form input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // Handle gender selection from dropdown
+  const handleGenderSelect = (genderValue: string) => {
+    setFormData(prev => ({ ...prev, gender: genderValue }));
+    setIsGenderDropdownOpen(false);
   };
 
   // Handle country selection from dropdown
@@ -128,35 +145,48 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
             />
           </div>
           
-          <div>
+          {/* Gender Dropdown */}
+          <div ref={genderDropdownRef}>
             <label className="block text-sm font-bold text-zinc-400 mb-2">Gender</label>
-            <select 
-              name="gender"
-              value={formData.gender} 
-              onChange={handleChange}
-              className="w-full bg-bull-dark border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-bull-orange transition-colors"
-            >
-              <option value="">Select Gender</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-bold text-zinc-400 mb-2">Twitter/X Username</label>
-            <input 
-              type='text' 
-              name="twitterUsername"
-              value={formData.twitterUsername} 
-              onChange={handleChange}
-              placeholder="@username"
-              className="w-full bg-bull-dark border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-bull-orange transition-colors"
-            />
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsGenderDropdownOpen(!isGenderDropdownOpen)}
+                className="w-full flex items-center justify-between bg-bull-dark border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-bull-orange transition-colors"
+              >
+                <span className={formData.gender ? 'text-white' : 'text-zinc-500'}>
+                  {formData.gender || 'Select Gender'}
+                </span>
+                <ChevronDown size={18} className={`transition-transform ${isGenderDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Gender dropdown menu */}
+              {isGenderDropdownOpen && (
+                <div className="absolute z-10 w-full mt-2 bg-bull-dark border border-white/10 rounded-xl overflow-hidden shadow-2xl">
+                  <div className="max-h-60 overflow-y-auto">
+                    {genderOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => handleGenderSelect(option.value)}
+                        className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors ${
+                          formData.gender === option.value ? 'bg-bull-orange/10' : ''
+                        }`}
+                      >
+                        <span className="text-sm text-left flex-1">{option.label}</span>
+                        {formData.gender === option.value && (
+                          <span className="text-bull-orange text-xs font-bold">Selected</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           
           {/* Country Dropdown with Search */}
-          <div ref={dropdownRef}>
+          <div ref={countryDropdownRef}>
             <label className="block text-sm font-bold text-zinc-400 mb-2">Country</label>
             <div className="relative">
               {/* Selected country display */}
@@ -230,6 +260,19 @@ const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
                 </div>
               )}
             </div>
+          </div>
+          
+          {/* Twitter/X Username - moved below country */}
+          <div>
+            <label className="block text-sm font-bold text-zinc-400 mb-2">Twitter/X Username</label>
+            <input 
+              type='text' 
+              name="twitterUsername"
+              value={formData.twitterUsername} 
+              onChange={handleChange}
+              placeholder="@username"
+              className="w-full bg-bull-dark border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-bull-orange transition-colors"
+            />
           </div>
           
           <div className="flex gap-3 pt-4">
