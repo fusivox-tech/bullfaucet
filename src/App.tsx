@@ -1,7 +1,7 @@
-// App.jsx
+// App.tsx
 import { motion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useData } from './contexts/DataContext';
 import PTCSection from './components/PTCSection';
 import Navbar from './components/Navbar';
@@ -25,6 +25,7 @@ import FullscreenIframe from './components/FullscreenIframe';
 import CustomAlert from "./components/CustomAlert";
 import NotificationPrompt from './components/NotificationPrompt'
 import Notifications from './components/Notifications';
+import MyAds from './components/MyAds';
 
 function AppContent() {
   const {
@@ -52,10 +53,6 @@ function AppContent() {
     prices,
     
     // UI State
-    activeTab,
-    setActiveTab,
-    isMobileMenuOpen,
-    setIsMobileMenuOpen,
     showLogin,
     setShowLogin,
     showRegister,
@@ -83,10 +80,21 @@ function AppContent() {
     handleOfferComplete,
   } = useData();
   
+  const navigate = useNavigate();
+  const location = useLocation();
   const appRef = useRef<HTMLDivElement>(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isNotificationPromptVisible, setIsNotificationPromptVisible] = useState(false);
   const [isNoteOpen, setIsNoteOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Get current active tab from path
+  const activeTab = location.pathname.slice(1) || 'dashboard';
+  
+  // Update active tab when navigating
+  const setActiveTab = (tab: string) => {
+    navigate(`/${tab}`);
+  };
   
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -97,26 +105,26 @@ function AppContent() {
     }
   }, []);
   
-useEffect(() => {
-  const handleScroll = () => {
-    const scrollPosition = window.scrollY;
-    console.log('Window scroll position:', scrollPosition); // Add this to debug
-    setIsScrolled(scrollPosition > 50);
-  };
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY;
+      setIsScrolled(scrollPosition > 50);
+    };
 
-  // Check initial state
-  handleScroll();
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
 
-  window.addEventListener('scroll', handleScroll, { passive: true });
-
-  return () => {
-    window.removeEventListener('scroll', handleScroll);
-  };
-}, []);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
   
-  const numericBalance = ((user?.bullfiBalance || 0) * tokenPrice) + ((user?.bitcoinBalance || 0) * bitcoinPrice) + ((user?.bnbBalance || 0) * binancePrice) + ((user?.xrpBalance || 0) * ripplePrice) + ((user?.solanaBalance || 0) * solanaPrice);
+  const numericBalance = ((user?.bullfiBalance || 0) * tokenPrice) + 
+                        ((user?.bitcoinBalance || 0) * bitcoinPrice) + 
+                        ((user?.bnbBalance || 0) * binancePrice) + 
+                        ((user?.xrpBalance || 0) * ripplePrice) + 
+                        ((user?.solanaBalance || 0) * solanaPrice);
 
-  // Create formatted string version
   const balance = numericBalance < 0.02 ? 
     numericBalance.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 4 }) : 
     numericBalance.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
@@ -206,86 +214,103 @@ useEffect(() => {
       />
 
       <main className="pt-24 p-6 md:p-10 max-w-7xl mx-auto">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {activeTab === 'dashboard' && (
-            <Dashboard 
-              user={user} 
-              onDeposit={() => setIsDepositModalOpen(true)} 
-              onWithdraw={() => setIsWithdrawModalOpen(true)} 
-              onSwap={() => setIsSwapModalOpen(true)}
-              prices={prices}
-              balance={balance}
-            />
-          )}
-          {activeTab === 'faucet' && (
-            <FaucetSection 
-              user={user} 
-              claims={claims} 
-              dailyActivity={dailyActivity}
-              onSpin={handleSpin}
-              setAlert={(message) => {
-                console.log('Alert:', message);
-                alert(message.message);
-              }}
-              checkAuth={checkAuth}
-              tokenPrice={tokenPrice}
-              solanaPrice={solanaPrice}
-              bitcoinPrice={bitcoinPrice}
-              binancePrice={binancePrice}
-              ripplePrice={ripplePrice}
-            />
-          )}
-          {activeTab === 'ptc' && (
-            <PTCSection 
-              ads={ads}
-              bitcoTasks={bitcoTasks}
-              user={user}
-              onComplete={handleAdComplete}
-              onBitcoTaskComplete={handleBitcoTaskComplete}
-              checkAuth={checkAuth}
-              openRegister={() => setShowRegister(true)}
-              tokenPrice={tokenPrice}
-              getRewardMultiplier={() => {
-                if (!user?.membership?.level) return 1;
-                switch(user.membership.level) {
-                  case 'juniorPartner': return 2;
-                  case 'mediumPartner': return 3;
-                  case 'seniorPartner': return 4;
-                  default: return 1;
-                }
-              }}
-              bitcoTasksLoading={bitcoTasksLoading}
-            />
-          )}
-          {activeTab === 'farm' && (
-            <YieldFarmSection 
-              user={user} 
-              farms={farms} 
-              onLock={handleLock} 
-            />
-          )}
-          {activeTab === 'referrals' && (
-            <ReferralSection user={user} />
-          )}
-          {activeTab === 'offers' && (
-            <OffersSection 
-              onComplete={handleOfferComplete} 
-              onViewDetail={(offer) => {
-                setSelectedOffer(offer);
-                setIsOfferModalOpen(true);
-              }} 
-            />
-          )}
-          {activeTab === 'profile' && <Profile />}
-          {activeTab === 'contest' && <DailyContest />}
-          {activeTab === 'create-ad' && <CreateAd user={user} />}
-          {activeTab === 'offerwalls' && <Offerwalls />}
-        </motion.div>
+        <AnimatedRoutes activeTab={activeTab}>
+          <Route 
+            path="/dashboard" 
+            element={
+              <Dashboard 
+                user={user} 
+                onDeposit={() => setIsDepositModalOpen(true)} 
+                onWithdraw={() => setIsWithdrawModalOpen(true)} 
+                onSwap={() => setIsSwapModalOpen(true)}
+                prices={prices}
+                balance={balance}
+              />
+            } 
+          />
+          <Route 
+            path="/faucet" 
+            element={
+              <FaucetSection 
+                user={user} 
+                claims={claims} 
+                dailyActivity={dailyActivity}
+                onSpin={handleSpin}
+                setAlert={(message) => {
+                  console.log('Alert:', message);
+                  alert(message.message);
+                }}
+                checkAuth={checkAuth}
+                tokenPrice={tokenPrice}
+                solanaPrice={solanaPrice}
+                bitcoinPrice={bitcoinPrice}
+                binancePrice={binancePrice}
+                ripplePrice={ripplePrice}
+              />
+            } 
+          />
+          <Route 
+            path="/ptc" 
+            element={
+              <PTCSection 
+                ads={ads}
+                bitcoTasks={bitcoTasks}
+                user={user}
+                onComplete={handleAdComplete}
+                onBitcoTaskComplete={handleBitcoTaskComplete}
+                checkAuth={checkAuth}
+                openRegister={() => setShowRegister(true)}
+                tokenPrice={tokenPrice}
+                getRewardMultiplier={() => {
+                  if (!user?.membership?.level) return 1;
+                  switch(user.membership.level) {
+                    case 'juniorPartner': return 2;
+                    case 'mediumPartner': return 3;
+                    case 'seniorPartner': return 4;
+                    default: return 1;
+                  }
+                }}
+                bitcoTasksLoading={bitcoTasksLoading}
+              />
+            } 
+          />
+          <Route 
+            path="/farm" 
+            element={
+              <YieldFarmSection 
+                user={user} 
+                farms={farms} 
+                onLock={handleLock} 
+                onDeposit={() => setIsDepositModalOpen(true)}
+              />
+            } 
+          />
+          <Route 
+            path="/referrals" 
+            element={<ReferralSection user={user} />} 
+          />
+          <Route 
+            path="/offers" 
+            element={
+              <OffersSection 
+                onComplete={handleOfferComplete} 
+                onViewDetail={(offer) => {
+                  setSelectedOffer(offer);
+                  setIsOfferModalOpen(true);
+                }} 
+              />
+            } 
+          />
+          <Route 
+            path="/my-ads" 
+            element={<MyAds onCreateAd={() => setActiveTab('create-ad')} />} 
+          />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/contest" element={<DailyContest />} />
+          <Route path="/create-ad" element={<CreateAd user={user} />} />
+          <Route path="/offerwalls" element={<Offerwalls />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </AnimatedRoutes>
       </main>
 
       {/* Background Decorative Elements */}
@@ -297,13 +322,29 @@ useEffect(() => {
   );
 }
 
+// Custom wrapper to preserve your animations
+const AnimatedRoutes = ({ children, activeTab }: { children: React.ReactNode; activeTab: string }) => {
+  return (
+    <motion.div
+      key={activeTab}
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Routes>
+        {children}
+      </Routes>
+    </motion.div>
+  );
+};
+
 // Wrap with Router at the top level
 export default function App() {
   return (
     <Router>
       <Routes>
         <Route path="/iframe-task" element={<FullscreenIframe />} />
-        <Route path="*" element={<AppContent />} />
+        <Route path="/*" element={<AppContent />} />
       </Routes>
     </Router>
   );

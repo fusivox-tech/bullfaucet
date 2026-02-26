@@ -1,3 +1,4 @@
+// components/MobileMenu.tsx
 import { motion } from 'motion/react';
 import { 
   LayoutDashboard, 
@@ -9,8 +10,10 @@ import {
   User as UserIcon,
   PlusSquare,
   Gift,
-  X
+  X,
+  Megaphone
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -25,6 +28,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
   activeTab, 
   setActiveTab, 
 }) => {
+  const navigate = useNavigate();
 
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -36,8 +40,15 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
     { id: 'referrals', label: 'Referrals', icon: Users },
     { id: 'contest', label: 'Daily Contest', icon: Gift },
     { id: 'create-ad', label: 'Create Ad', icon: PlusSquare },
+    { id: 'my-ads', label: 'My Ads', icon: Megaphone },
     { id: 'profile', label: 'Profile', icon: UserIcon },
   ];
+
+  const handleItemClick = (id: string) => {
+    navigate(`/${id}`);
+    setActiveTab(id);
+    onClose();
+  };
 
   if (!isOpen) return null;
 
@@ -59,10 +70,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-2">
               <img 
-                onClick={() => {
-                  setActiveTab('dashboard');
-                  onClose();
-                }} 
+                onClick={() => handleItemClick('dashboard')} 
                 src="https://res.cloudinary.com/danuehpic/image/upload/v1771869182/wordmark_pynw6f.png" 
                 alt="Bull Faucet" 
                 className="h-8 object-contain cursor-pointer" 
@@ -74,13 +82,11 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
             </button>
           </div>
 
+          {/* Main Menu Items */}
           {menuItems.map((item) => (
             <button
               key={item.id}
-              onClick={() => {
-                setActiveTab(item.id);
-                onClose();
-              }}
+              onClick={() => handleItemClick(item.id)}
               className={`flex items-center gap-3 px-4 py-4 rounded-xl transition-all duration-200 ${
                 activeTab === item.id 
                   ? 'bg-bull-orange text-white' 
@@ -94,7 +100,6 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
           
         </motion.div>
       </motion.div>
-
     </>
   );
 };

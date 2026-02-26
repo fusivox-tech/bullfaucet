@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Sprout, Info, X, CheckCircle, AlertCircle, Lock, ChevronDown } from 'lucide-react';
+// YieldFarm.tsx
+
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Sprout, Info, X, CheckCircle, AlertCircle, Lock, ChevronDown, Wallet, ArrowDownCircle } from 'lucide-react';
 import { User, COINS, YieldFarm } from '../types';
 import { useData } from '../contexts/DataContext';
 
@@ -13,6 +15,7 @@ interface YieldFarmSectionProps {
     days: number;
     rate: number;
   }) => void;
+  onDeposit?: () => void; // Add onDeposit prop
 }
 
 // Yield tiers data (matching old app)
@@ -128,7 +131,7 @@ const getTokens = (user: User | null, prices: Record<string, number>) => [
   }
 ];
 
-const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock }) => {
+const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock, onDeposit }) => {
   const { prices } = useData();
   const [selectedTier, setSelectedTier] = useState<typeof YIELD_TIERS[0] | null>(null);
   const [showPlantModal, setShowPlantModal] = useState(false);
@@ -144,6 +147,16 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
   const tokens = getTokens(user, prices);
   const selectedTokenInfo = tokens.find(t => t.symbol === selectedCoin);
   
+  // Calculate total user balance in USD
+  const totalBalanceUsd = useMemo(() => {
+    return tokens.reduce((total, token) => {
+      return total + (token.balance * token.price);
+    }, 0);
+  }, [tokens]);
+
+  // Check if user has no farms and balance < $5
+  const showDepositPrompt = farms.length === 0 && totalBalanceUsd < 5;
+
   const totalPendingRewards = farms.reduce((total, farm) => {
     const token = tokens.find(t => t.symbol === farm.token);
     const tokenPrice = token?.price || 0;
@@ -178,7 +191,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
     const start = new Date(farm.startDate).getTime();
     const end = new Date(farm.endDate).getTime();
     const daysPassed = (now - start) / (1000 * 60 * 60 * 24);
-    const totalDays = farm.duration || 0; // Add fallback in case duration is undefined
+    const totalDays = farm.duration || 0;
     
     const accrued = farm.amount * (farm.dailyYield / 100) * Math.min(daysPassed, totalDays);
     const pending = farm.amount * (farm.dailyYield / 100) * Math.max(0, totalDays - daysPassed);
@@ -251,11 +264,11 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
     }
 
     onLock({
-      token: selectedCoin, // Changed from 'coin' to 'token' to match interface
+      token: selectedCoin,
       amount: amount,
       farmType: selectedTier.name,
       days: selectedTier.days,
-      rate: selectedTier.dailyRate / 100 // Convert percentage to decimal
+      rate: selectedTier.dailyRate / 100
     });
 
     setShowPlantModal(false);
@@ -324,6 +337,86 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
         </div>
       </div>
 
+      {/* Deposit Prompt for New Users */}
+      {showDepositPrompt && (
+        <div className="p-8 rounded-3xl glass border-2 border-bull-orange/30 bg-gradient-to-br from-bull-orange/5 to-transparent relative overflow-hidden">
+          {/* Decorative elements */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-bull-orange/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-bull-orange/5 rounded-full blur-2xl -ml-16 -mb-16"></div>
+          
+          <div className="relative flex flex-col md:flex-row items-center gap-8">
+            {/* Icon and Text */}
+            <div className="flex-1 text-center md:text-left">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-bull-orange/20 mb-4">
+                <Wallet className="w-8 h-8 text-bull-orange" />
+              </div>
+              <h4 className="text-2xl font-display font-bold mb-2">
+                Start Your Farming Journey! 🌱
+              </h4>
+              <p className="text-zinc-400 mb-4 max-w-lg">
+                You need at least <span className="text-bull-orange font-bold">$5</span> in your portfolio to start farming. 
+                Make your first deposit to unlock passive daily yields and grow your crypto!
+              </p>
+              
+              {/* Quick stats */}
+              <div className="flex flex-wrap gap-4 justify-center md:justify-start mb-6">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                    <Sprout className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs text-zinc-500">Current Balance</p>
+                    <p className="text-sm font-bold">${totalBalanceUsd.toFixed(2)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-bull-orange/10 flex items-center justify-center">
+                    <ArrowDownCircle className="w-4 h-4 text-bull-orange" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs text-zinc-500">Minimum Needed</p>
+                    <p className="text-sm font-bold text-bull-orange">$5.00</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Button */}
+            <div className="flex-shrink-0">
+              <button
+                onClick={onDeposit}
+                className="group relative px-8 py-4 rounded-2xl bg-gradient-to-r from-bull-orange to-orange-600 font-bold text-lg hover:scale-105 active:scale-95 transition-all shadow-lg shadow-bull-orange/20 overflow-hidden"
+              >
+                <span className="relative z-10 flex items-center gap-3">
+                  <ArrowDownCircle className="w-5 h-5" />
+                  Deposit Now
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-600 to-bull-orange opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              </button>
+              <p className="text-xs text-zinc-500 mt-3 text-center">
+                Start earning up to <span className="text-emerald-400">365% APR</span>
+              </p>
+            </div>
+          </div>
+
+          {/* Benefits badges */}
+          <div className="relative mt-8 flex flex-wrap gap-3 justify-center border-t border-white/5 pt-6">
+            <span className="px-3 py-1.5 rounded-full text-xs bg-white/5 text-zinc-300">
+              ⚡ Daily Yields
+            </span>
+            <span className="px-3 py-1.5 rounded-full text-xs bg-white/5 text-zinc-300">
+              🔒 Lock Periods 10-360 Days
+            </span>
+            <span className="px-3 py-1.5 rounded-full text-xs bg-white/5 text-zinc-300">
+              💰 Multiple Tokens Supported
+            </span>
+            <span className="px-3 py-1.5 rounded-full text-xs bg-white/5 text-zinc-300">
+              🚀 Compound Your Earnings
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Active Farms */}
       {farms.length > 0 && (
         <div className="space-y-4">
@@ -351,13 +444,12 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
                       />
                       <div>
                         <h5 className="font-bold">{farm.token} {tier?.name || farm.tierName} Farm</h5>
-                        <p className="text-xs text-zinc-500"><p className="text-xs text-zinc-500">
-  {farm.token === 'BTC' 
-    ? farm.amount.toFixed(8) 
-    : farm.token === 'BULLFI' 
-      ? Math.round(farm.amount).toLocaleString()
-      : farm.amount.toFixed(4)} {farm.token} · Started {new Date(farm.startDate).toLocaleDateString()}
-</p>
+                        <p className="text-xs text-zinc-500">
+                          {farm.token === 'BTC' 
+                            ? farm.amount.toFixed(8) 
+                            : farm.token === 'BULLFI' 
+                              ? Math.round(farm.amount).toLocaleString()
+                              : farm.amount.toFixed(4)} {farm.token} · Started {new Date(farm.startDate).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
@@ -402,8 +494,8 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
         </div>
       )}
 
-      {/* Empty State */}
-      {farms.length === 0 && (
+      {/* Empty State - Only show if no farms and no deposit prompt */}
+      {farms.length === 0 && !showDepositPrompt && (
         <div className="p-12 rounded-3xl glass border border-white/5 text-center">
           <Sprout size={48} className="mx-auto mb-4 text-bull-orange opacity-50" />
           <h4 className="text-xl font-display font-bold mb-2">No Active Farms</h4>
@@ -411,127 +503,133 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
         </div>
       )}
 
-      {/* Yield Tiers Header */}
-      <div className="flex items-center justify-between">
-        <h4 className="font-display font-bold flex items-center gap-2">
-          <Sprout size={20} className="text-bull-orange" />
-          Create A Farm
-        </h4>
-      </div>
+      {/* Yield Tiers Header - Only show if not showing deposit prompt */}
+      {!showDepositPrompt && (
+        <div className="flex items-center justify-between">
+          <h4 className="font-display font-bold flex items-center gap-2">
+            <Sprout size={20} className="text-bull-orange" />
+            Create A Farm
+          </h4>
+        </div>
+      )}
 
-      {/* Yield Tiers - Desktop/Horizontal Scroll */}
-      <div 
-        ref={tiersContainerRef}
-        className="hidden md:flex gap-4 overflow-x-auto pb-4 scrollbar-hide scroll-smooth"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-      >
-        {YIELD_TIERS.map((tier) => (
-          <div 
-            key={tier.id}
-            className="flex-none w-72 p-6 rounded-2xl glass border border-white/5 hover:border-bull-orange/30 transition-all group"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h5 className="font-display font-bold text-lg">{tier.name}</h5>
-                <p className="text-xs text-zinc-500">{formatDuration(tier.days)}</p>
-              </div>
-              {tier.badge && (
-                <span className={`text-[10px] px-2 py-1 rounded-full ${
-                  tier.badge === 'popular' 
-                    ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                    : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                }`}>
-                  {tier.badge === 'popular' ? '🔥 Popular' : '✨ Best Value'}
-                </span>
-              )}
-            </div>
-
-            <p className="text-xs text-zinc-500 mb-4">{tier.description}</p>
-
-            <div className="mb-4">
-              <p className="text-3xl font-display font-bold text-emerald-400">{tier.dailyRate}%</p>
-              <p className="text-xs text-zinc-500">Daily Yield</p>
-            </div>
-
-            <div className="flex justify-between text-xs mb-6">
-              <span className="text-zinc-500">APR</span>
-              <span className="font-bold">{tier.apr}%</span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 mb-6">
-              <div className="p-2 rounded-lg bg-white/5">
-                <p className="text-[10px] text-zinc-500">Min Lock</p>
-                <p className="text-xs font-bold">${tier.minAmountUsd}</p>
-              </div>
-              <div className="p-2 rounded-lg bg-white/5">
-                <p className="text-[10px] text-zinc-500">Total Return</p>
-                <p className="text-xs font-bold">{Math.round(tier.days * tier.dailyRate)}%</p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => handleTierSelect(tier)}
-              className="w-full py-3 rounded-xl bg-bull-orange font-bold hover:scale-[1.02] active:scale-[0.98] transition-all"
+      {/* Yield Tiers - Desktop/Horizontal Scroll - Only show if not showing deposit prompt */}
+      {!showDepositPrompt && (
+        <div 
+          ref={tiersContainerRef}
+          className="hidden md:flex gap-4 overflow-x-auto pb-4 scrollbar-hide scroll-smooth"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {YIELD_TIERS.map((tier) => (
+            <div 
+              key={tier.id}
+              className="flex-none w-72 p-6 rounded-2xl glass border border-white/5 hover:border-bull-orange/30 transition-all group"
             >
-              Plant Seed
-            </button>
-          </div>
-        ))}
-      </div>
-
-      {/* Yield Tiers - Mobile/Grid Layout */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
-        {YIELD_TIERS.map((tier) => (
-          <div 
-            key={tier.id}
-            className="p-4 rounded-xl glass border border-white/5 hover:border-bull-orange/30 transition-all group"
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <h5 className="font-display font-bold">{tier.name}</h5>
-                <p className="text-[10px] text-zinc-500">{formatDuration(tier.days)}</p>
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h5 className="font-display font-bold text-lg">{tier.name}</h5>
+                  <p className="text-xs text-zinc-500">{formatDuration(tier.days)}</p>
+                </div>
+                {tier.badge && (
+                  <span className={`text-[10px] px-2 py-1 rounded-full ${
+                    tier.badge === 'popular' 
+                      ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                      : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                  }`}>
+                    {tier.badge === 'popular' ? '🔥 Popular' : '✨ Best Value'}
+                  </span>
+                )}
               </div>
-              {tier.badge && (
-                <span className={`text-[8px] px-2 py-0.5 rounded-full ${
-                  tier.badge === 'popular' 
-                    ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                    : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                }`}>
-                  {tier.badge === 'popular' ? '🔥' : '✨'}
-                </span>
-              )}
-            </div>
 
-            <div className="mb-3">
-              <p className="text-2xl font-display font-bold text-emerald-400">{tier.dailyRate}%</p>
-              <p className="text-[10px] text-zinc-500">Daily Yield</p>
-            </div>
+              <p className="text-xs text-zinc-500 mb-4">{tier.description}</p>
 
-            <div className="flex justify-between text-[10px] mb-3">
-              <span className="text-zinc-500">APR</span>
-              <span className="font-bold">{tier.apr}%</span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 mb-3">
-              <div className="p-1.5 rounded-lg bg-white/5">
-                <p className="text-[8px] text-zinc-500">Min</p>
-                <p className="text-[10px] font-bold">${tier.minAmountUsd}</p>
+              <div className="mb-4">
+                <p className="text-3xl font-display font-bold text-emerald-400">{tier.dailyRate}%</p>
+                <p className="text-xs text-zinc-500">Daily Yield</p>
               </div>
-              <div className="p-1.5 rounded-lg bg-white/5">
-                <p className="text-[8px] text-zinc-500">Total</p>
-                <p className="text-[10px] font-bold">{Math.round(tier.days * tier.dailyRate)}%</p>
-              </div>
-            </div>
 
-            <button
-              onClick={() => handleTierSelect(tier)}
-              className="w-full py-2 rounded-lg bg-bull-orange text-xs font-bold hover:scale-[1.02] active:scale-[0.98] transition-all"
+              <div className="flex justify-between text-xs mb-6">
+                <span className="text-zinc-500">APR</span>
+                <span className="font-bold">{tier.apr}%</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 mb-6">
+                <div className="p-2 rounded-lg bg-white/5">
+                  <p className="text-[10px] text-zinc-500">Min Lock</p>
+                  <p className="text-xs font-bold">${tier.minAmountUsd}</p>
+                </div>
+                <div className="p-2 rounded-lg bg-white/5">
+                  <p className="text-[10px] text-zinc-500">Total Return</p>
+                  <p className="text-xs font-bold">{Math.round(tier.days * tier.dailyRate)}%</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => handleTierSelect(tier)}
+                className="w-full py-3 rounded-xl bg-bull-orange font-bold hover:scale-[1.02] active:scale-[0.98] transition-all"
+              >
+                Plant Seed
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Yield Tiers - Mobile/Grid Layout - Only show if not showing deposit prompt */}
+      {!showDepositPrompt && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
+          {YIELD_TIERS.map((tier) => (
+            <div 
+              key={tier.id}
+              className="p-4 rounded-xl glass border border-white/5 hover:border-bull-orange/30 transition-all group"
             >
-              Plant
-            </button>
-          </div>
-        ))}
-      </div>
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h5 className="font-display font-bold">{tier.name}</h5>
+                  <p className="text-[10px] text-zinc-500">{formatDuration(tier.days)}</p>
+                </div>
+                {tier.badge && (
+                  <span className={`text-[8px] px-2 py-0.5 rounded-full ${
+                    tier.badge === 'popular' 
+                      ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                      : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                  }`}>
+                    {tier.badge === 'popular' ? '🔥' : '✨'}
+                  </span>
+                )}
+              </div>
+
+              <div className="mb-3">
+                <p className="text-2xl font-display font-bold text-emerald-400">{tier.dailyRate}%</p>
+                <p className="text-[10px] text-zinc-500">Daily Yield</p>
+              </div>
+
+              <div className="flex justify-between text-[10px] mb-3">
+                <span className="text-zinc-500">APR</span>
+                <span className="font-bold">{tier.apr}%</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <div className="p-1.5 rounded-lg bg-white/5">
+                  <p className="text-[8px] text-zinc-500">Min</p>
+                  <p className="text-[10px] font-bold">${tier.minAmountUsd}</p>
+                </div>
+                <div className="p-1.5 rounded-lg bg-white/5">
+                  <p className="text-[8px] text-zinc-500">Total</p>
+                  <p className="text-[10px] font-bold">{Math.round(tier.days * tier.dailyRate)}%</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => handleTierSelect(tier)}
+                className="w-full py-2 rounded-lg bg-bull-orange text-xs font-bold hover:scale-[1.02] active:scale-[0.98] transition-all"
+              >
+                Plant
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Plant Seed Modal */}
       {showPlantModal && selectedTier && (

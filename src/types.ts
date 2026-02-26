@@ -419,3 +419,21 @@ export interface TokenData {
   websiteUrl?: string;
   contractAddress?: string;
 }
+
+export interface AdTask {
+  _id: string;
+  taskTitle: string;
+  taskDescription: string;
+  taskUrl: string;
+  taskDuration: string;
+  campaignType: 'Links' | 'Website';
+  clicks: number;
+  clicked?: number;
+  status: 'Pending' | 'In Progress' | 'Paused' | 'Completed' | 'Rejected' | 'Query';
+  createdAt: string;
+  countries?: Array<{ name: string; count: number }>;
+  devices?: Array<{ name: string; count: number }>;
+  genders?: Array<{ name: string; count: number }>;
+  targetedDevices?: string[];
+  targetedRegions?: string[];
+}
