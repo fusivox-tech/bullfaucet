@@ -165,7 +165,6 @@ export const DailyContest = () => {
           <div className="col-span-1">Rank</div>
           <div className="col-span-4">User</div>
           <div className="col-span-2">Earnings Today</div>
-          <div className="col-span-2">Prize Share</div>
           <div className="col-span-3">Prize Amount</div>
         </div>
 
