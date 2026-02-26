@@ -8,6 +8,7 @@ import TwoFAModal from './TwoFAModal2';
 import TwoFAAuthModal from './TwoFAAuthModal';
 import ProfileEditModal from './ProfileEditModal';
 import ProfileOTPVerificationModal from './ProfileOtpVerificationModal';
+import ResetPasswordModal from './ResetPasswordModal';
 
 interface Country {
   name: string;
@@ -36,6 +37,8 @@ export const Profile = () => {
   const [bioLoading, setBioLoading] = useState(false);
   const [bio, setBio] = useState(user?.bio || "");
   const [originalBio, setOriginalBio] = useState(user?.bio || "");
+  
+  const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
   
   // Profile image states
   const [profileImageLoading, setProfileImageLoading] = useState(false);
@@ -304,10 +307,6 @@ export const Profile = () => {
     handleProfileDataSubmitted(formData);
   };
 
-  const handleResetPassword = () => {
-    window.location.href = '/reset-password';
-  };
-
   const handleLogout = () => {
     setLogoutModalActive(true);
   };
@@ -330,6 +329,10 @@ export const Profile = () => {
     const timestamp = objectId?.toString().substring(0, 8);
     const date = new Date(parseInt(timestamp, 16) * 1000);
     return date;
+  };
+  
+  const handleResetPassword = () => {
+    setIsResetPasswordModalOpen(true);
   };
 
   const formatRegistrationDate = (objectId: string) => {
@@ -685,6 +688,13 @@ export const Profile = () => {
           setAlert={setAlert}
         />
       )}
+      
+      <ResetPasswordModal
+        isOpen={isResetPasswordModalOpen}
+        onClose={() => setIsResetPasswordModalOpen(false)}
+        email={user?.email || ""}
+        setAlert={setAlert}
+      />
       
       {/* Logout Confirmation Modal */}
       {logoutModalActive && (
