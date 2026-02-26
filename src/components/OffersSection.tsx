@@ -4,7 +4,8 @@ import {
   Briefcase, 
   Filter,
   ChevronDown,
-  Sparkles
+  Sparkles,
+  Play
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import OfferDetailModal from './OfferDetailModal';
@@ -325,7 +326,7 @@ const OffersSection: React.FC<OffersSectionProps> = ({ onComplete }) => {
     return Array.from(sources);
   }, [randomizedItems]);
 
-  // Filter items
+  // Filter and organize items
   const filteredItems = useMemo(() => {
     let filtered = [...randomizedItems];
 
@@ -339,11 +340,51 @@ const OffersSection: React.FC<OffersSectionProps> = ({ onComplete }) => {
       filtered = filtered.filter(item => item.source === sourceFilter);
     }
 
-    // Remove started offers
-    const startedIds = new Set(user?.startedOffers?.map((so: any) => so.id) || []);
-    filtered = filtered.filter(item => !startedIds.has(item.id));
+    // Get started offers from user
+    const startedOffers = user?.startedOffers || [];
+    
+    // Create a map of started offers by ID for quick lookup
+    const startedOffersMap = new Map(
+      startedOffers.map((so: any) => [so.id, so])
+    );
 
-    return filtered;
+    // Separate started and new offers
+    const startedItems: any[] = [];
+    const newItems: any[] = [];
+
+    filtered.forEach(item => {
+      const startedOffer = startedOffersMap.get(item.id);
+      if (startedOffer) {
+        // Merge events from started offer with current offer
+        const mergedItem = {
+          ...item,
+          startedOffer: true,
+          // Merge events if they exist
+          events: item.events?.map((event: any) => {
+            // Find matching event in started offer by ID or name
+            const startedEvent = startedOffer.events?.find(
+              (se: any) => se.uuid === event.uuid || se.event_id === event.event_id || se.name === event.name
+            );
+            
+            if (startedEvent) {
+              // Merge status from started event
+              return {
+                ...event,
+                status: startedEvent.status || event.status,
+                isCompleted: startedEvent.isCompleted || event.isCompleted
+              };
+            }
+            return event;
+          }) || startedOffer.events // Use started offer events if current has none
+        };
+        startedItems.push(mergedItem);
+      } else {
+        newItems.push(item);
+      }
+    });
+
+    // Place started items at the top, followed by new items
+    return [...startedItems, ...newItems];
   }, [randomizedItems, sourceFilter, typeFilter, user?.startedOffers]);
 
   // Loading timeout effect - removed featuredOffersLoading
@@ -494,13 +535,16 @@ const OffersSection: React.FC<OffersSectionProps> = ({ onComplete }) => {
           {filteredItems.map((item) => {
             const hasImageError = imageErrors[item.id];
             const difficultyColor = getDifficultyColor(item.difficulty);
+            const isStarted = item.startedOffer;
             
             return (
               <motion.div
                 key={item.id}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="glass p-4 rounded-2xl hover:border-bull-orange/30 transition-all cursor-pointer group"
+                className={`glass p-4 rounded-2xl hover:border-bull-orange/30 transition-all cursor-pointer group ${
+                  isStarted ? 'border-bull-orange/30 bg-bull-orange/5' : ''
+                }`}
                 onClick={() => handleOfferClick(item)}
               >
                 <div className="flex items-start gap-3">
@@ -529,7 +573,7 @@ const OffersSection: React.FC<OffersSectionProps> = ({ onComplete }) => {
                         {item.title}
                       </h4>
                       <div className="flex items-center gap-1 text-emerald-400 font-mono font-bold text-sm whitespace-nowrap">
-                        ${item.reward_usd.toFixed(2)}
+                        ${item.reward_usd?.toFixed(2)}
                       </div>
                     </div>
 
@@ -551,6 +595,12 @@ const OffersSection: React.FC<OffersSectionProps> = ({ onComplete }) => {
                       {item.multiplier > 1 && (
                         <span className="text-[8px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">
                           {item.multiplier}x
+                        </span>
+                      )}
+                      {isStarted && (
+                        <span className="text-[8px] px-2 py-0.5 rounded-full bg-bull-orange/20 text-bull-orange border border-bull-orange/30 flex items-center gap-1">
+                          <Play className="w-3 h-3" />
+                          Continue
                         </span>
                       )}
                     </div>

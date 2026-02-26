@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, AlertTriangle, Trash2, Info, ListChecks, CheckCircle, Clock, Smartphone, Monitor } from 'lucide-react';
+import { X, AlertTriangle, Trash2, Info, ListChecks, CheckCircle, Clock, Smartphone, Monitor, Play } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 
 interface OfferDetailModalProps {
@@ -126,7 +126,6 @@ const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, of
       const result = await response.json();
       
       if (result.success) {
-        
         // Close the modal
         setShowRemoveConfirm(false);
         onClose();
@@ -205,7 +204,7 @@ const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, of
 
   if (!offer) return null;
 
-  const isStarted = user?.startedOffers?.some((so: any) => so.id === offer?.id);
+  const isStarted = offer?.startedOffer || user?.startedOffers?.some((so: any) => so.id === offer?.id);
 
   return (
     <AnimatePresence>
@@ -236,9 +235,9 @@ const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, of
 
               <div className="flex items-start justify-between gap-4">
                 <div className="flex gap-4 max-w-[60%] md:gap-5">
-                {/* Offer Image */}
-                <div className="w-20 h-20 rounded-2xl bg-white/5 overflow-hidden flex-shrink-0">
-                  {!hasImageError && offer?.image_url ? (
+                  {/* Offer Image */}
+                  <div className="w-20 h-20 rounded-2xl bg-white/5 overflow-hidden flex-shrink-0">
+                    {!hasImageError && offer?.image_url ? (
                       <img 
                         src={offer?.image_url} 
                         alt={offer?.title}
@@ -252,9 +251,9 @@ const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, of
                         className="w-full h-full object-cover"
                       />
                     )}
-                </div>
-                
-                <h3 className="text-xl font-display font-bold mb-1 max-w-[70%] line-clamp-3">{offer?.title}</h3>
+                  </div>
+                  
+                  <h3 className="text-xl font-display font-bold mb-1 max-w-[70%] line-clamp-3">{offer?.title}</h3>
                 </div>
 
                 {/* Reward */}
@@ -267,46 +266,51 @@ const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, of
                 </div>
               </div>
               
-               {/* Offer Info */}
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-0 ml-23 mt-5">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${difficultyColor}`}>
-                      {offer?.difficulty || 'Easy'}
+              {/* Offer Info */}
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-0 ml-23 mt-5">
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${difficultyColor}`}>
+                    {offer?.difficulty || 'Easy'}
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-white/5 text-zinc-400 text-[10px] font-bold uppercase tracking-wider">
+                    {offer?.type || 'Offer'}
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-white/5 text-zinc-400 text-[10px] font-bold uppercase tracking-wider">
+                    {offer?.provider}
+                  </span>
+                  {isStarted && (
+                    <span className="px-2 py-0.5 rounded-full bg-bull-orange/20 text-bull-orange text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                      <Play className="w-3 h-3" />
+                      In Progress
                     </span>
-                    <span className="px-2 py-0.5 rounded-full bg-white/5 text-zinc-400 text-[10px] font-bold uppercase tracking-wider">
-                      {offer?.type || 'Offer'}
-                    </span>
-                    <span className="px-2 py-0.5 rounded-full bg-white/5 text-zinc-400 text-[10px] font-bold uppercase tracking-wider">
-                      {offer?.provider}
-                    </span>
-                  </div>
-
-                  {/* Device Icons */}
-                  <div className="flex items-center gap-2">
-                    {offer?.devices?.length > 0 ? (
-                      offer?.devices.map((device: any, index: number) => {
-                        const deviceName = device.name?.toLowerCase() || device?.toLowerCase();
-                        return (
-                          <i
-                            key={index}
-                            className={
-                              deviceName.includes('android') ? "fab fa-android text-emerald-400" :
-                              deviceName.includes('ios') || deviceName.includes('iphone') ? "fab fa-apple text-zinc-400" :
-                              deviceName.includes('windows') ? "fab fa-windows text-blue-400" :
-                              deviceName.includes('mac') ? "fab fa-apple text-zinc-400" :
-                              deviceName.includes('desktop') ? "fas fa-desktop text-zinc-400" :
-                              deviceName.includes('mobile') ? "fas fa-mobile-alt text-zinc-400" :
-                              "fas fa-question-circle text-zinc-400"
-                            }
-                          />
-                        );
-                      })
-                    ) : (
-                      <i className={getDeviceIcon()}></i>
-                    )}
-                  </div>
+                  )}
                 </div>
-                
+
+                {/* Device Icons */}
+                <div className="flex items-center gap-2 mt-2">
+                  {offer?.devices?.length > 0 ? (
+                    offer?.devices.map((device: any, index: number) => {
+                      const deviceName = device.name?.toLowerCase() || device?.toLowerCase();
+                      return (
+                        <i
+                          key={index}
+                          className={
+                            deviceName.includes('android') ? "fab fa-android text-emerald-400" :
+                            deviceName.includes('ios') || deviceName.includes('iphone') ? "fab fa-apple text-zinc-400" :
+                            deviceName.includes('windows') ? "fab fa-windows text-blue-400" :
+                            deviceName.includes('mac') ? "fab fa-apple text-zinc-400" :
+                            deviceName.includes('desktop') ? "fas fa-desktop text-zinc-400" :
+                            deviceName.includes('mobile') ? "fas fa-mobile-alt text-zinc-400" :
+                            "fas fa-question-circle text-zinc-400"
+                          }
+                        />
+                      );
+                    })
+                  ) : (
+                    <i className={getDeviceIcon()}></i>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Scrollable Content */}
@@ -381,8 +385,8 @@ const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, of
                       onClick={() => window.open(offer?.click_url, '_blank')}
                       className="w-full py-4 rounded-2xl bg-bull-orange text-white font-bold hover:bg-orange-600 transition-all shadow-lg shadow-bull-orange/20 flex items-center justify-center gap-2"
                     >
-                      <Monitor className="w-5 h-5" />
-                      Continue Offer
+                      <Play className="w-5 h-5" />
+                      Continue Playing
                     </button>
                     <button
                       onClick={() => setShowRemoveConfirm(true)}
