@@ -158,7 +158,7 @@ interface DataContextType {
   fetchAds: () => Promise<void>;
   fetchDailyActivity: () => Promise<void>;
   handleSpin: (coin: string, roll: string, prize: number) => Promise<void>;
-  handleAdComplete: (adId: number, reward: number) => void;
+  handleAdComplete: (adId: string, reward: number) => void;
   handleLock: (data: any) => void;
   handleDeposit: (coin: string, amount: number) => void;
   handleWithdraw: (coin: string, amount: number) => void;
@@ -1147,18 +1147,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [isAuthenticated]);
 
   // Action Handlers
-  const handleAdComplete = (adId: number, reward: number) => {
-    setUser((prev: any) => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        bullfiBalance: (prev.bullfiBalance || 0) + reward,
-        ads_completed_today: (prev.ads_completed_today || 0) + 1
-      };
-    });
-    
-    setAds((prev: any[]) => prev.filter(ad => ad._id !== adId));
-  };
+const handleAdComplete = (adId: string, reward: number) => {  // Changed from number to string
+  setUser((prev: any) => {
+    if (!prev) return null;
+    return {
+      ...prev,
+      bullfiBalance: (prev.bullfiBalance || 0) + reward,
+      ads_completed_today: (prev.ads_completed_today || 0) + 1
+    };
+  });
+  
+  setAds((prev: any[]) => prev.filter(ad => ad._id !== adId));  // _id is string, so this works
+};
 
   const handleDeposit = (coin: string, amount: number) => {
     setUser((prev: any) => {

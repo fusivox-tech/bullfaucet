@@ -1,23 +1,31 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { MousePointer2, Clock, ExternalLink } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
+import API_BASE_URL from '../config';
 
 interface PTCSectionProps {
-  ads: any[]; // BullFaucet ads
-  bitcoTasks: any[]; // Add this
+  ads: any[];
+  bitcoTasks: any[];
   user: any;
-  onComplete: (adId: number, reward: number) => void;
-  onBitcoTaskComplete: (taskId: string, reward: number) => void; // Add this
+  onComplete: (adId: string, reward: number) => void; // Changed adId from number to string
+  onBitcoTaskComplete: (taskId: string, reward: number) => void; 
   checkAuth: () => boolean;
   openRegister: () => void;
   tokenPrice?: number;
   getRewardMultiplier?: () => number;
-  bitcoTasksLoading?: boolean; // Add this
+  bitcoTasksLoading?: boolean; 
+}
+
+// Define options type
+interface CompleteAdOptions {
+  immediateUIUpdate?: boolean;
+  showAlert?: boolean;
+  backgroundMode?: boolean;
 }
 
 const PTCSection: React.FC<PTCSectionProps> = ({ 
   ads, 
-  bitcoTasks = [], // Add default
+  bitcoTasks = [],
   user,
   onComplete, 
   onBitcoTaskComplete,
@@ -36,12 +44,144 @@ const PTCSection: React.FC<PTCSectionProps> = ({
   const [isConfirming, setIsConfirming] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
 
+  // Helper function to get auth headers
+  const getAuthHeaders = useCallback(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    };
+  }, []);
+
+  // Handle authentication errors
+  const handleAuthError = useCallback((error: Error) => {
+    console.error('Authentication error:', error);
+    if (error.message.includes('token') || error.message.includes('auth') || 
+        error.message.includes('401') || error.message.includes('403')) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("userId");
+      setAlert({ message: 'Session expired. Please log in again.', type: "error" });
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 2000);
+      return true;
+    }
+    return false;
+  }, [setAlert]);
+
+  // Get user's operating system
+  const getOperatingSystem = useCallback(() => {
+    const userAgent = navigator.userAgent;
+    
+    if (userAgent.indexOf("Win") !== -1) return "Windows";
+    if (userAgent.indexOf("Mac") !== -1) return "MacOS";
+    if (userAgent.indexOf("X11") !== -1) return "UNIX";
+    if (userAgent.indexOf("Linux") !== -1) return "Linux";
+    if (/Android/.test(userAgent)) return "Android";
+    if (/iPhone|iPad|iPod/.test(userAgent)) return "iOS";
+    
+    return "Unknown";
+  }, []);
+
+  // Get device type - fixed TypeScript error
+  const getDeviceType = useCallback(() => {
+    // Check if userAgentData is available (modern browsers)
+    if ('userAgentData' in navigator && navigator.userAgentData) {
+      return (navigator.userAgentData as any).mobile ? "Mobile" : "Desktop";
+    }
+    // Fallback for older browsers
+    const userAgent = navigator.userAgent.toLowerCase();
+    if (userAgent.includes("android") || userAgent.includes("iphone") || userAgent.includes("ipad")) return "Mobile";
+    return "Desktop";
+  }, []);
+  
   // Calculate reward with multiplier for BullFaucet ads
-  const calculateBullFaucetReward = (baseReward: number) => {
+  const calculateBullFaucetReward = useCallback((baseReward: number) => {
     const multiplier = getRewardMultiplier();
     const calculatedBaseReward = Math.floor((baseReward / 2) / tokenPrice);
     return Math.floor(calculatedBaseReward * multiplier);
-  };
+  }, [getRewardMultiplier, tokenPrice]);
+
+  // Complete BullFaucet ad with backend update
+  const completeBullFaucetAd = useCallback(async (adId: string, ad: any, options: CompleteAdOptions = {}) => {
+    const {
+      immediateUIUpdate = true,
+      showAlert = true,
+      backgroundMode = false
+    } = options;
+    
+    if (!backgroundMode) {
+      setIsCompleting(true);
+    }
+    
+    try {
+      const userDevice = getDeviceType();
+      const userOS = getOperatingSystem();
+      const completedTask = { ...ad, completedAt: new Date() };
+      
+      // Calculate reward with membership multiplier
+      const reward = calculateBullFaucetReward(ad.taskReward);
+      const multiplier = getRewardMultiplier();
+
+      const headers = getAuthHeaders();
+      const userId = localStorage.getItem('userId');
+      
+      const response = await fetch(`${API_BASE_URL}/tasks/complete-task`, {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify({ 
+          userId, 
+          taskId: adId, 
+          completedTask, 
+          userDevice,
+          userOS,
+          membershipLevel: user?.membership?.level,
+          rewardMultiplier: multiplier,
+          isBullFaucetTask: true
+        }),
+      });
+
+      // Handle authentication errors
+      if (response.status === 401 || response.status === 403) {
+        handleAuthError(new Error('Authentication failed'));
+        return;
+      }
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        if (showAlert) {
+          setAlert({ message: `🪙 You earned ${reward} BULLFI!`, type: "success" });
+        }
+      } else {
+        if (!backgroundMode) {
+          setAlert({ message: data.message || "Failed to complete task", type: "error" });
+        }
+        console.error("Task completion failed:", data.message);
+      }
+      
+      // Immediate UI updates
+      if (immediateUIUpdate) {
+        onComplete(adId, reward);
+        setActiveAd(null);
+        setIsConfirming(false);
+        setCountdown(null);
+      }
+      
+    } catch (error) {
+      console.error("Error completing task:", error);
+      if (!backgroundMode && !handleAuthError(error as Error)) {
+        setAlert({ message: "Failed to complete task", type: "error" });
+      }
+    } finally {
+      if (!backgroundMode) {
+        setIsCompleting(false);
+      }
+    }
+  }, [user, getRewardMultiplier, calculateBullFaucetReward, getAuthHeaders, getDeviceType, getOperatingSystem, handleAuthError, setAlert, onComplete]);
 
   // Calculate reward for BitcoTasks
   const calculateBitcoTaskReward = useCallback((baseReward: number | string) => {
@@ -104,9 +244,16 @@ const PTCSection: React.FC<PTCSectionProps> = ({
       const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
       return () => clearTimeout(timer);
     } else if (activeAd && timeLeft === 0 && !isCompleting) {
-      completeAd(activeAd);
+      // For website ads, complete when timer reaches 0
+      if (activeAd.type === 'bullfaucet' && activeAd.campaignType === 'Website') {
+        completeBullFaucetAd(activeAd._id, activeAd, {
+          immediateUIUpdate: true,
+          showAlert: true,
+          backgroundMode: false
+        });
+      }
     }
-  }, [activeAd, timeLeft]);
+  }, [activeAd, timeLeft, isCompleting, completeBullFaucetAd]);
 
   // Handle message from iframe
   useEffect(() => {
@@ -123,22 +270,23 @@ const PTCSection: React.FC<PTCSectionProps> = ({
 
       if (type === 'TASK_COMPLETED' && activeAd && 
           (activeAd._id === taskId || activeAd.id === taskId)) {
-        const reward = activeAd.type === 'bullfaucet' 
-          ? calculateBullFaucetReward(activeAd.taskReward)
-          : calculateBitcoTaskReward(activeAd.reward);
-        
-        setAlert({
-          message: `🪙 You earned ${reward} BULLFI!`,
-          type: "success"
-        });
         
         if (activeAd.type === 'bullfaucet') {
-          onComplete(activeAd._id, reward);
+          completeBullFaucetAd(activeAd._id, activeAd, {
+            immediateUIUpdate: true,
+            showAlert: true,
+            backgroundMode: false
+          });
         } else {
+          const reward = calculateBitcoTaskReward(activeAd.reward);
+          setAlert({
+            message: `🪙 You earned ${reward} BULLFI!`,
+            type: "success"
+          });
           onBitcoTaskComplete(activeAd.id, reward);
+          setActiveAd(null);
         }
         
-        setActiveAd(null);
         setIsCompleting(false);
         setIsPaused(false);
         setWebProgress(0);
@@ -147,31 +295,7 @@ const PTCSection: React.FC<PTCSectionProps> = ({
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [activeAd, onComplete, onBitcoTaskComplete, setAlert, calculateBullFaucetReward, calculateBitcoTaskReward]);
-
-  // Complete ad function
-  const completeAd = (ad: any) => {
-    setIsCompleting(true);
-    const reward = ad.type === 'bullfaucet' 
-      ? calculateBullFaucetReward(ad.taskReward)
-      : calculateBitcoTaskReward(ad.reward);
-    
-    setAlert({
-      message: `🪙 You earned ${reward} BULLFI!`,
-      type: "success"
-    });
-    
-    if (ad.type === 'bullfaucet') {
-      onComplete(ad._id, reward);
-    } else {
-      onBitcoTaskComplete(ad.id, reward);
-    }
-    
-    setActiveAd(null);
-    setIsCompleting(false);
-    setIsConfirming(false);
-    setCountdown(null);
-  };
+  }, [activeAd, onBitcoTaskComplete, setAlert, calculateBitcoTaskReward, completeBullFaucetAd]);
 
   // Handle Links type ads (BullFaucet)
   const handleLinksAd = (ad: any) => {
@@ -190,18 +314,13 @@ const PTCSection: React.FC<PTCSectionProps> = ({
       });
     }, 1000);
     
-    // Complete after 15 seconds
+    // Complete after 15 seconds with backend update
     setTimeout(() => {
-      const reward = calculateBullFaucetReward(ad.taskReward);
-      setAlert({
-        message: `🪙 You earned ${reward} BULLFI!`,
-        type: "success"
+      completeBullFaucetAd(ad._id, ad, {
+        immediateUIUpdate: true,
+        showAlert: true,
+        backgroundMode: false
       });
-      
-      onComplete(ad._id, reward);
-      setCountdown(null);
-      setActiveAd(null);
-      setIsConfirming(false);
       clearInterval(timer);
     }, 15000);
   };
@@ -280,48 +399,58 @@ const PTCSection: React.FC<PTCSectionProps> = ({
 
     return (
       <div className="fixed inset-0 z-[100] bg-bull-dark/90 backdrop-blur-xl flex flex-col items-center justify-center p-6">
-        <div className="w-32 h-32 rounded-full border-4 border-white/10 flex items-center justify-center relative">
-          <svg className="absolute inset-0 w-full h-full -rotate-90">
-            <circle
-              cx="64" cy="64" r="60"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="4"
-              className="text-bull-orange"
-              strokeDasharray={377}
-              strokeDashoffset={377 - (377 * progress / 100)}
-              style={{ transition: 'stroke-dashoffset 1s linear' }}
-            />
-          </svg>
-          <span className="text-4xl font-display font-bold">{currentTimeLeft}s</span>
-        </div>
-        <h3 className="mt-8 text-2xl font-display font-bold">
-          {isConfirming ? 'Confirming Visit' : 'Viewing Advertisement'}
-        </h3>
-        <p className="text-zinc-400 mt-2">
-          {isConfirming 
-            ? 'Please wait while we confirm your visit...' 
-            : 'Keep the window open to receive your reward.'}
-        </p>
-        {isPaused && (
-          <p className="mt-4 text-yellow-400 font-bold">
-            Paused! Return to the Ad tab.
-          </p>
-        )}
-        <p className="mt-4 font-mono text-bull-orange font-bold">{activeAd.title}</p>
-        
-        {/* Progress bar for website ads */}
-        {!isConfirming && (
-          <div className="w-64 mt-6">
-            <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-bull-orange transition-all duration-1000"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
-        )}
+  <div className="relative w-32 h-32 flex items-center justify-center">
+    {/* Background circle (white border) */}
+    <div className="absolute inset-0 rounded-full border-4 border-white/10"></div>
+    
+    {/* Progress circle */}
+    <svg className="absolute inset-0 w-full h-full -rotate-90">
+      <circle
+        cx="64"
+        cy="64"
+        r="58" 
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="4"
+        strokeLinecap="round" 
+        className="text-bull-orange"
+        strokeDasharray={364.42} 
+        strokeDashoffset={364.42 - (364.42 * progress / 100)}
+        style={{ transition: 'stroke-dashoffset 1s linear' }}
+      />
+    </svg>
+    
+    {/* Timer text */}
+    <span className="relative text-4xl font-display font-bold z-10">{currentTimeLeft}s</span>
+  </div>
+  
+  <h3 className="mt-8 text-2xl font-display font-bold">
+    {isConfirming ? 'Confirming Visit' : 'Viewing Advertisement'}
+  </h3>
+  <p className="text-zinc-400 mt-2">
+    {isConfirming 
+      ? 'Please wait while we confirm your visit...' 
+      : 'Keep the window open to receive your reward.'}
+  </p>
+  {isPaused && (
+    <p className="mt-4 text-yellow-400 font-bold">
+      Paused! Return to the Ad tab.
+    </p>
+  )}
+  <p className="mt-4 font-mono text-bull-orange font-bold">{activeAd.title}</p>
+  
+  {/* Progress bar for website ads */}
+  {!isConfirming && (
+    <div className="w-64 mt-6">
+      <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+        <div 
+          className="h-full bg-bull-orange transition-all duration-1000"
+          style={{ width: `${progress}%` }}
+        />
       </div>
+    </div>
+  )}
+</div>
     );
   }
 

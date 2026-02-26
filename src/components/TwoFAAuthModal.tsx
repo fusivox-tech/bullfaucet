@@ -235,7 +235,7 @@ const TwoFAAuthModal: React.FC<TwoFAAuthModalProps> = ({ user, onClose, setAlert
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="max-w-md w-full rounded-3xl glass border border-white/10 overflow-hidden">
+      <div className="max-w-md w-full rounded-3xl glass border border-white/10 overflow-hidden max-h-[90vh] overflow-y-auto scrollbar-hide">
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <h3 className="text-xl font-bold">Set Up Authenticator 2FA</h3>
           <button 
