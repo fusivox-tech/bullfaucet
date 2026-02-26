@@ -1,8 +1,9 @@
 // components/GenderModal.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
 import fallbackCountries from '../fallbackCountries.json';
+import CustomDropdown from './CustomDropdown';
 
 interface GenderModalProps {
   isOpen: boolean;
@@ -17,6 +18,12 @@ interface Country {
   flag: string;
 }
 
+const genderOptions = [
+  { value: 'Male', label: 'Male' },
+  { value: 'Female', label: 'Female' },
+  { value: 'Other', label: 'Other' },
+];
+
 const GenderModal: React.FC<GenderModalProps> = ({ 
   isOpen, 
   onClose, 
@@ -28,6 +35,9 @@ const GenderModal: React.FC<GenderModalProps> = ({
   const [countries, setCountries] = useState<Country[]>([]);
   const [selectedCountry, setSelectedCountry] = useState("");
   const [isCountryDetected, setIsCountryDetected] = useState(true);
+  
+  const genderDropdownRef = useRef<HTMLDivElement>(null);
+  const countryDropdownRef = useRef<HTMLDivElement>(null);
 
   // Initialize countries
   useEffect(() => {
@@ -62,6 +72,14 @@ const GenderModal: React.FC<GenderModalProps> = ({
       setIsCountryDetected(false);
     }
   }, [countries, userCountry]);
+
+  const handleGenderChange = (genderValue: string) => {
+    setSelectedGender(genderValue);
+  };
+
+  const handleCountryChange = (countryName: string) => {
+    setSelectedCountry(countryName);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,57 +139,36 @@ const GenderModal: React.FC<GenderModalProps> = ({
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Gender Selection */}
-              <div className="space-y-3">
-                <label className="block text-sm font-bold text-zinc-400 mb-2">Select Gender *</label>
-                <div className="grid grid-cols-3 gap-3">
-                  {['male', 'female', 'other'].map((gender) => (
-                    <label
-                      key={gender}
-                      className={`relative flex items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-all ${
-                        selectedGender === gender
-                          ? 'border-bull-orange bg-bull-orange/10'
-                          : 'border-white/10 hover:border-white/20'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="gender"
-                        value={gender}
-                        checked={selectedGender === gender}
-                        onChange={(e) => setSelectedGender(e.target.value)}
-                        disabled={isLoading}
-                        className="absolute opacity-0 w-0 h-0"
-                      />
-                      <span className="text-sm font-medium capitalize">{gender}</span>
-                    </label>
-                  ))}
-                </div>
+              {/* Gender Selection with CustomDropdown */}
+              <div ref={genderDropdownRef}>
+                <label className="block text-sm font-bold text-zinc-400 mb-2">
+                  Select Gender *
+                </label>
+                <CustomDropdown
+                  type="gender"
+                  value={selectedGender}
+                  onChange={handleGenderChange}
+                  genderOptions={genderOptions}
+                  placeholder="Select your gender..."
+                  disabled={isLoading}
+                />
               </div>
 
               {/* Country Selection (if not detected) */}
               {!isCountryDetected && (
-                <div className="space-y-2">
+                <div ref={countryDropdownRef}>
                   <label className="block text-sm font-bold text-zinc-400 mb-2">
                     Select Your Country *
                   </label>
-                  <div className="relative">
-                    <select
-                      value={selectedCountry}
-                      onChange={(e) => setSelectedCountry(e.target.value)}
-                      disabled={isLoading}
-                      required
-                      className="w-full bg-bull-dark border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-bull-orange transition-colors appearance-none"
-                    >
-                      <option value="">Select your country...</option>
-                      {countries.map((country, index) => (
-                        <option key={index} value={country.name}>
-                          {country.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <p className="text-xs text-zinc-500">
+                  <CustomDropdown
+                    type="country"
+                    value={selectedCountry}
+                    onChange={handleCountryChange}
+                    countries={countries}
+                    placeholder="Select your country..."
+                    disabled={isLoading}
+                  />
+                  <p className="text-xs text-zinc-500 mt-2">
                     Country could not be automatically detected. Please select your country manually.
                   </p>
                 </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { X, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
 import ReCAPTCHA from "react-google-recaptcha";
@@ -7,6 +7,7 @@ import fallbackCountries from '../fallbackCountries.json';
 import { TwoFAModal } from './TwoFAModal';
 import { MultiFactorModal } from './MultiFactorModal';
 import GoogleLoginButton from './GoogleLoginButton';
+import CustomDropdown from './CustomDropdown';
 
 const Alert = ({ alert }: { alert: { message: string, type: string } }) => {
   if (!alert.message) return null;
@@ -362,7 +363,6 @@ export const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
   const [repeatPassword, setRepeatPassword] = useState("");
   const [termsChecked, setTermsChecked] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState("");
-  const [selectedFlag, setSelectedFlag] = useState(""); 
   
   const [isLoading, setIsLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
@@ -375,6 +375,30 @@ export const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
   const [otp, setOtp] = useState("");
   const [resendDisabled, setResendDisabled] = useState(true);
   const [resendCountdown, setResendCountdown] = useState(0);
+  
+  const genderDropdownRef = useRef<HTMLDivElement>(null);
+  const countryDropdownRef = useRef<HTMLDivElement>(null);
+  
+  const genderOptions = [
+    { value: 'Male', label: 'Male' },
+    { value: 'Female', label: 'Female' },
+    { value: 'Other', label: 'Other' },
+  ];
+  
+  const formattedCountries = fallbackCountries.map((country: any) => ({
+    name: country.country,
+    flag: country.flag_base64
+  })).sort((a, b) => a.name.localeCompare(b.name));
+
+  // Handler for gender change
+  const handleGenderChange = (genderValue: string) => {
+    setGender(genderValue);
+  };
+
+  // Handler for country change
+  const handleCountryChange = (countryName: string) => {
+    setSelectedCountry(countryName);
+  };
 
   useEffect(() => {
     if (!isOpen) {
@@ -385,7 +409,6 @@ export const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
       setRepeatPassword("");
       setTermsChecked(false);
       setSelectedCountry("");
-      setSelectedFlag("");
       setRecaptchaToken("");
       setAlert({ message: "", type: "" });
     }
@@ -426,19 +449,6 @@ export const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
     const newPassword = e.target.value;
     setPassword(newPassword);
     setPasswordStrength(checkPasswordStrength(newPassword));
-  };
-
-  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selected = e.target.value;
-    setSelectedCountry(selected);
-    
-    // Fix: Handle potential null/undefined value
-    const foundCountry = fallbackCountries.find((c: any) => c.country === selected);
-    if (foundCountry?.flag_base64) {
-      setSelectedFlag(foundCountry.flag_base64);
-    } else {
-      setSelectedFlag(""); // Set empty string if no flag found
-    }
   };
 
   const sendOtp = async () => {
@@ -561,31 +571,24 @@ export const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
             className="w-full bg-bull-dark border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-bull-orange transition-colors"
           />
           
-          <select 
-            value={gender} 
-            onChange={(e) => setGender(e.target.value)}
-            className="w-full bg-bull-dark border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-bull-orange transition-colors appearance-none"
-          >
-            <option value="">Select your gender...</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Other">Other</option>
-          </select>
+          <div ref={genderDropdownRef}>
+            <CustomDropdown
+              type="gender"
+              value={gender}
+              onChange={handleGenderChange}
+              genderOptions={genderOptions}
+              placeholder="Select your gender..."
+            />
+          </div>
 
-          <div className="relative">
-            <select 
-              value={selectedCountry} 
+          <div ref={countryDropdownRef}>
+            <CustomDropdown
+              type="country"
+              value={selectedCountry}
               onChange={handleCountryChange}
-              className="w-full bg-bull-dark border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-bull-orange transition-colors appearance-none"
-            >
-              <option value="">Select your country...</option>
-              {fallbackCountries.map((country: any, index: number) => (
-                <option key={index} value={country.country}>{country.country}</option>
-              ))}
-            </select>
-            {selectedFlag && (
-              <img src={selectedFlag} alt="flag" className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-4 object-cover rounded-sm" />
-            )}
+              countries={formattedCountries}
+              placeholder="Select your country..."
+            />
           </div>
 
           <div className="relative">
