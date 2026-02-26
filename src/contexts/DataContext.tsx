@@ -92,6 +92,9 @@ interface DataContextType {
   binancePrice: number;
   ripplePrice: number;
   prices: Record<string, number>;
+  volumes: Record<string, number>;
+  priceChanges: Record<string, number>;
+  marketCaps: Record<string, number>;
   
   // Token Data (Market Data)
   tokenData: any;
@@ -351,6 +354,30 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     SOL: solanaPrice,
     BNB: binancePrice,
     XRP: ripplePrice
+  };
+  
+  const volumes: Record<string, number> = {
+    BULLFI: tokenData?.volume_usd?.h24,
+    BTC: bitcoinData?.total_volume,
+    SOL: solanaData.total_volume,
+    BNB: binanceData.total_volume,
+    XRP: rippleData.total_volume,
+  }
+  
+  const priceChanges: Record<string, number> = {
+    BULLFI: tokenData.price_change_percentage?.h24,
+    BTC: bitcoinData.price_change_percentage_24h,
+    SOL: solanaData.price_change_percentage_24h,
+    BNB: binanceData.price_change_percentage_24h,
+    XRP: rippleData.price_change_percentage_24h,
+  }
+  
+  const marketCaps: Record<string, number> = {
+    BULLFI: tokenData.fdv_usd,
+    BTC: bitcoinData.market_cap,
+    SOL: solanaData.market_cap,
+    BNB: binanceData.market_cap,
+    XRP: rippleData.market_cap,
   };
   
   // ADD YIELD TIERS CONSTANT HERE
@@ -1077,7 +1104,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const poolData = await poolResponse.json();
           if (poolData.data?.attributes) {
             setTokenPrice(parseFloat(poolData.data.attributes.base_token_price_usd));
-            setTokenData(poolData.data);
+            setTokenData(poolData.data.attributes);
           }
         }
 
@@ -1747,6 +1774,9 @@ useEffect(() => {
     binancePrice,
     ripplePrice,
     prices,
+    volumes,
+    priceChanges,
+    marketCaps,
     
     // Token Data (Market Data)
     tokenData,

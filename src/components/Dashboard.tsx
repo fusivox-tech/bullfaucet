@@ -17,6 +17,7 @@ import { useData } from '../contexts/DataContext';
 import PendingEarningsModal from './PendingEarningsModal';
 import GlobalActivitiesFeed from './GlobalActivitiesFeed';
 import History from './History';
+import TokenInfoModal from './TokenInfoModal';
 
 // Helper function to get balance key
 const getBalanceKey = (coin: string) => {
@@ -56,9 +57,22 @@ const Dashboard: React.FC<DashboardProps> = ({
   prices, 
   balance
 }) => {
-  const { dailyActivity, tokenPrice, bitcoinPrice, solanaPrice, binancePrice, ripplePrice } = useData();
+  const { 
+    dailyActivity, 
+    tokenPrice, 
+    bitcoinPrice, 
+    solanaPrice, 
+    binancePrice, 
+    ripplePrice,
+    volumes,
+    priceChanges,
+    marketCaps,
+  } = useData();
+  
   const [isPendingModalOpen, setIsPendingModalOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
+  const [selectedToken, setSelectedToken] = useState<any>(null);
   
   // Get today's PTC count from dailyActivity
   const ptcToday = useMemo(() => {
@@ -124,42 +138,122 @@ const Dashboard: React.FC<DashboardProps> = ({
   };
 
   // Get today's earnings summary
-const todayEarnings = useMemo(() => {
-  const ptcUsd = (dailyActivity?.ptcEarningsToday || 0) * tokenPrice;
-  const offersUsd = (dailyActivity?.offerWallEarningsToday || 0) * tokenPrice;
-  let faucetUsd = 0;
-  
-  if (dailyActivity?.faucetEarnings) {
-    faucetUsd += (dailyActivity.faucetEarnings.bullfiFaucetEarningsToday || 0) * tokenPrice;
-    faucetUsd += (dailyActivity.faucetEarnings.solFaucetEarningsToday || 0) * solanaPrice;
-    faucetUsd += (dailyActivity.faucetEarnings.xrpFaucetEarningsToday || 0) * ripplePrice;
-    faucetUsd += (dailyActivity.faucetEarnings.bnbFaucetEarningsToday || 0) * binancePrice;
-    faucetUsd += (dailyActivity.faucetEarnings.btcFaucetEarningsToday || 0) * bitcoinPrice;
-  }
-  
-  // Total USD earnings
-  const totalUsd = ptcUsd + faucetUsd + offersUsd;
-  
-  return {
-    ptc: dailyActivity?.ptcEarningsToday || 0,
-    faucet: dailyActivity?.faucetEarningsToday || 0,
-    offers: dailyActivity?.offerWallEarningsToday || 0,
+  const todayEarnings = useMemo(() => {
+    const ptcUsd = (dailyActivity?.ptcEarningsToday || 0) * tokenPrice;
+    const offersUsd = (dailyActivity?.offerWallEarningsToday || 0) * tokenPrice;
+    let faucetUsd = 0;
     
-    // USD values
-    ptcUsd,
-    faucetUsd,
-    offersUsd,
-    totalUsd,
+    if (dailyActivity?.faucetEarnings) {
+      faucetUsd += (dailyActivity.faucetEarnings.bullfiFaucetEarningsToday || 0) * tokenPrice;
+      faucetUsd += (dailyActivity.faucetEarnings.solFaucetEarningsToday || 0) * solanaPrice;
+      faucetUsd += (dailyActivity.faucetEarnings.xrpFaucetEarningsToday || 0) * ripplePrice;
+      faucetUsd += (dailyActivity.faucetEarnings.bnbFaucetEarningsToday || 0) * binancePrice;
+      faucetUsd += (dailyActivity.faucetEarnings.btcFaucetEarningsToday || 0) * bitcoinPrice;
+    }
     
-    faucetBreakdown: {
-      bullfiUsd: (dailyActivity?.faucetEarnings?.bullfiFaucetEarningsToday || 0) * tokenPrice,
-      solUsd: (dailyActivity?.faucetEarnings?.solFaucetEarningsToday || 0) * solanaPrice,
-      xrpUsd: (dailyActivity?.faucetEarnings?.xrpFaucetEarningsToday || 0) * ripplePrice,
-      bnbUsd: (dailyActivity?.faucetEarnings?.bnbFaucetEarningsToday || 0) * binancePrice,
-      btcUsd: (dailyActivity?.faucetEarnings?.btcFaucetEarningsToday || 0) * bitcoinPrice,
+    const totalUsd = ptcUsd + faucetUsd + offersUsd;
+    
+    return {
+      ptc: dailyActivity?.ptcEarningsToday || 0,
+      faucet: dailyActivity?.faucetEarningsToday || 0,
+      offers: dailyActivity?.offerWallEarningsToday || 0,
+      ptcUsd,
+      faucetUsd,
+      offersUsd,
+      totalUsd,
+      faucetBreakdown: {
+        bullfiUsd: (dailyActivity?.faucetEarnings?.bullfiFaucetEarningsToday || 0) * tokenPrice,
+        solUsd: (dailyActivity?.faucetEarnings?.solFaucetEarningsToday || 0) * solanaPrice,
+        xrpUsd: (dailyActivity?.faucetEarnings?.xrpFaucetEarningsToday || 0) * ripplePrice,
+        bnbUsd: (dailyActivity?.faucetEarnings?.bnbFaucetEarningsToday || 0) * binancePrice,
+        btcUsd: (dailyActivity?.faucetEarnings?.btcFaucetEarningsToday || 0) * bitcoinPrice,
+      }
+    };
+  }, [dailyActivity, tokenPrice, solanaPrice, ripplePrice, binancePrice, bitcoinPrice]);
+
+const handleCoinClick = (coin: typeof COINS[0]) => {
+  const getMarketCapForCoin = () => {
+    if (coin.id === 'BULLFI') {
+      return marketCaps.BULLFI ? parseFloat(marketCaps.BULLFI as unknown as string) : null;
+    }
+    return marketCaps[coin.id] || null;
+  };
+
+  // Helper to safely parse volume
+  const getVolumeForCoin = () => {
+    if (coin.id === 'BULLFI') {
+      return volumes.BULLFI ? parseFloat(volumes.BULLFI as unknown as string) : null;
+    }
+    return volumes[coin.id] || null;
+  };
+
+  const tokenData = {
+    id: coin.id,
+    name: coin.name,
+    ticker: coin.symbol,
+    image: coin.icon,
+    balance: (user as any)?.[getBalanceKey(coin.id)] || 0,
+    balanceUsd: ((user as any)?.[getBalanceKey(coin.id)] || 0) * (prices[coin.id] || 0),
+    price: prices[coin.id] || 0,
+    priceChangePercentage24h: priceChanges[coin.id],
+    marketCap: getMarketCapForCoin(),
+    tradingVolume24h: getVolumeForCoin(),
+    network: getNetworkForCoin(coin.id),
+    contractAddress: getContractAddress(coin.id),
+    websiteUrl: getWebsiteUrl(coin.id),
+    about: getAboutText(coin.id),
+  };
+  
+  setSelectedToken(tokenData);
+  setIsTokenModalOpen(true);
+};
+
+  // Helper functions for token data
+  const getNetworkForCoin = (coinId: string) => {
+    switch(coinId) {
+      case 'BULLFI': return 'Solana';
+      case 'SOL': return 'Solana';
+      case 'BTC': return 'Bitcoin';
+      case 'BNB': return 'BEP20';
+      case 'XRP': return 'Ripple';
+      default: return 'Unknown';
     }
   };
-}, [dailyActivity, tokenPrice, solanaPrice, ripplePrice, binancePrice, bitcoinPrice]);
+
+  const getContractAddress = (coinId: string) => {
+    switch(coinId) {
+      case 'BULLFI': return '2cGkyb8NCjQXeSV4CCwQRVFKTRMhMMaPmZvt6UxeXWwj';
+      default: return undefined;
+    }
+  };
+
+  const getWebsiteUrl = (coinId: string) => {
+    switch(coinId) {
+      case 'BULLFI': return 'https://www.geckoterminal.com/solana/pools/1M4GtWkWoZCqGeuYdRN1FLcQmSRvKNvLhz54jRmHM7G?utm_source=coingecko&utm_medium=referral&utm_campaign=searchresults';
+      case 'SOL': return 'https://solana.com';
+      case 'BTC': return 'https://bitcoin.org';
+      case 'BNB': return 'https://binance.com/en/bnb';
+      case 'XRP': return 'https://ripple.com/xrp';
+      default: return undefined;
+    }
+  };
+
+  const getAboutText = (coinId: string) => {
+    switch(coinId) {
+      case 'BULLFI':
+        return 'BULLFI is the native token of the BullFaucet project, launched as an SPL token on the Solana blockchain. To ensure total transparency and to protect the community, the liquidity pool token has been burnt, ensuring no foul play from the team. BULLFI is designed to grow alongside the BullFaucet platform. If you believe in the project, buy some BULLFI and hold, to secure a place for yourself in our future.';
+      case 'SOL':
+        return 'Solana is an innovative blockchain platform that supports scalable and decentralized applications. It was developed by Solana Labs, founded by Anatoly Yakovenko, and is governed by the Solana Foundation. Solana\'s dual consensus mechanism of proof-of-stake and proof-of-history allows for high transaction throughput. It has transaction speed and cost advantages over competitors like Ethereum.';
+      case 'BTC':
+        return 'Bitcoin uses peer-to-peer technology to operate with no central authority or banks; managing transactions and the issuing of bitcoins is carried out collectively by the network. Bitcoin is open-source; its design is public, nobody owns or controls Bitcoin and everyone can take part. Through many of its unique properties, Bitcoin allows exciting uses that could not be covered by any previous payment system.';
+      case 'BNB':
+        return 'BNB is the native token of the decentralized BNB Chain, where it powers transactions, pays for fees, and allows for participation in governance. It can also be used on the Binance exchange for benefits such as trading fee discounts, token airdrops, and VIP membership. The BNB burn mechanism involves periodically buying back and permanently destroying a portion of BNB tokens to reduce the total supply.';
+      case 'XRP':
+        return 'XRP enables businesses and financial institutions to drive their blockchain-based applications at scale. XRP is the native token of the XRP Ledger (XRPL), similar to ETH for the Ethereum blockchain or BTC for Bitcoin. XRP facilitates transactions on the network, protects the ledger from spam, and bridges currencies in the XRP Ledger\'s native decentralized exchange (DEX).';
+      default:
+        return '';
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -296,21 +390,25 @@ const todayEarnings = useMemo(() => {
               const price = prices[coin.id] || 0;
               const usdValue = balance * price;
               return (
-                <div key={coin.id} className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-colors">
+                <div 
+                  key={coin.id} 
+                  className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-bull-orange/30 hover:bg-white/10 transition-all cursor-pointer group"
+                  onClick={() => handleCoinClick(coin)}
+                >
                   <div className="flex items-center gap-3">
                     <img src={coin.icon} alt={coin.name} className="w-8 h-8 object-contain" referrerPolicy="no-referrer" />
                     <div>
-                      <p className="font-bold text-sm">{coin.name}</p>
+                      <p className="font-bold text-sm group-hover:text-bull-orange transition-colors">{coin.name}</p>
                       <p className="text-[10px] text-zinc-500 font-mono">
                         {coin.symbol} • <span className="text-emerald-400">${price > 1 ? price.toLocaleString() : price.toFixed(4)}</span>
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-mono font-bold text-sm">
-                      {coin.id === 'BULLFI' ? Math.round(balance) : balance.toFixed(coin.id === 'BTC' ? 8 : 4)}
+                    <p className="font-mono font-bold text-sm group-hover:text-white transition-colors">
+                      {coin.id === 'BULLFI' ? Math.round(balance).toLocaleString() : balance.toFixed(coin.id === 'BTC' ? 8 : 4)}
                     </p>
-                    <p className="text-[10px] text-zinc-500">${usdValue.toFixed(2)}</p>
+                    <p className="text-[10px] text-zinc-500 group-hover:text-zinc-400 transition-colors">${usdValue.toFixed(2)}</p>
                   </div>
                 </div>
               );
@@ -426,6 +524,11 @@ const todayEarnings = useMemo(() => {
         onClose={() => setIsHistoryOpen(false)}
       />
       
+      <TokenInfoModal
+        token={selectedToken}
+        active={isTokenModalOpen}
+        onClose={() => setIsTokenModalOpen(false)}
+      />
     </div>
   );
 };
