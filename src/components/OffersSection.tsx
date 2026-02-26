@@ -26,6 +26,32 @@ interface OffersSectionProps {
   onViewDetail: (offer: any) => void;
 }
 
+interface Event {
+  uuid?: string;
+  event_id?: string;
+  name?: string;
+  event_description?: string;
+  status?: string;
+  isCompleted?: number;
+  points?: number;
+  payout?: number;
+  currency_count?: number;
+  virtual_currency_value?: number;
+}
+
+interface StartedOffer {
+  id: string;
+  events?: Event[];
+  [key: string]: any;
+}
+
+interface Offer {
+  id: string;
+  events?: Event[];
+  startedOffer?: boolean;
+  [key: string]: any;
+}
+
 // Helper function to determine difficulty based on reward amount
 const getDifficultyFromReward = (reward: number): string => {
   if (reward < 50) return 'Easy';
@@ -326,66 +352,79 @@ const OffersSection: React.FC<OffersSectionProps> = ({ onComplete }) => {
     return Array.from(sources);
   }, [randomizedItems]);
 
-  // Filter and organize items
-  const filteredItems = useMemo(() => {
-    let filtered = [...randomizedItems];
+// Filter and organize items
+const filteredItems = useMemo(() => {
+  let filtered = [...randomizedItems] as Offer[];
 
-    // Apply type filter
-    if (typeFilter !== 'all') {
-      filtered = filtered.filter(item => item.category === typeFilter);
-    }
+  // Apply type filter
+  if (typeFilter !== 'all') {
+    filtered = filtered.filter(item => item.category === typeFilter);
+  }
 
-    // Apply source filter
-    if (sourceFilter !== 'all') {
-      filtered = filtered.filter(item => item.source === sourceFilter);
-    }
+  // Apply source filter
+  if (sourceFilter !== 'all') {
+    filtered = filtered.filter(item => item.source === sourceFilter);
+  }
 
-    // Get started offers from user
-    const startedOffers = user?.startedOffers || [];
-    
-    // Create a map of started offers by ID for quick lookup
-    const startedOffersMap = new Map(
-      startedOffers.map((so: any) => [so.id, so])
-    );
+  // Get started offers from user
+  const startedOffers = (user?.startedOffers || []) as StartedOffer[];
+  
+  // Create a map of started offers by ID for quick lookup
+  const startedOffersMap = new Map<string, StartedOffer>(
+    startedOffers.map((so: StartedOffer) => [so.id, so])
+  );
 
-    // Separate started and new offers
-    const startedItems: any[] = [];
-    const newItems: any[] = [];
+  // Separate started and new offers
+  const startedItems: Offer[] = [];
+  const newItems: Offer[] = [];
 
-    filtered.forEach(item => {
-      const startedOffer = startedOffersMap.get(item.id);
-      if (startedOffer) {
+  filtered.forEach(item => {
+    const startedOffer = startedOffersMap.get(item.id);
+    if (startedOffer) {
+      // Create a safe copy of the item
+      const mergedItem: Offer = {
+        ...item,
+        startedOffer: true
+      };
+      
+      // Safely check and merge events
+      const itemEvents = item.events || [];
+      const startedOfferEvents = startedOffer.events || [];
+      
+      if (itemEvents.length > 0) {
         // Merge events from started offer with current offer
-        const mergedItem = {
-          ...item,
-          startedOffer: true,
-          // Merge events if they exist
-          events: item.events?.map((event: any) => {
-            // Find matching event in started offer by ID or name
-            const startedEvent = startedOffer.events?.find(
-              (se: any) => se.uuid === event.uuid || se.event_id === event.event_id || se.name === event.name
-            );
-            
-            if (startedEvent) {
-              // Merge status from started event
-              return {
-                ...event,
-                status: startedEvent.status || event.status,
-                isCompleted: startedEvent.isCompleted || event.isCompleted
-              };
-            }
-            return event;
-          }) || startedOffer.events // Use started offer events if current has none
-        };
-        startedItems.push(mergedItem);
-      } else {
-        newItems.push(item);
+        mergedItem.events = itemEvents.map((event: Event) => {
+          // Find matching event in started offer by ID or name
+          const startedEvent = startedOfferEvents.find(
+            (se: Event) => se.uuid === event.uuid || 
+                        se.event_id === event.event_id || 
+                        se.name === event.name
+          );
+          
+          if (startedEvent) {
+            // Merge status from started event
+            return {
+              ...event,
+              status: startedEvent.status || event.status,
+              isCompleted: startedEvent.isCompleted || event.isCompleted
+            };
+          }
+          return event;
+        });
+      } else if (startedOfferEvents.length > 0) {
+        // Use started offer events if current has none
+        mergedItem.events = startedOfferEvents;
       }
-    });
+      
+      startedItems.push(mergedItem);
+    } else {
+      newItems.push(item);
+    }
+  });
 
-    // Place started items at the top, followed by new items
-    return [...startedItems, ...newItems];
-  }, [randomizedItems, sourceFilter, typeFilter, user?.startedOffers]);
+  // Place started items at the top, followed by new items
+  return [...startedItems, ...newItems];
+}, [randomizedItems, sourceFilter, typeFilter, user?.startedOffers]);
 
   // Loading timeout effect - removed featuredOffersLoading
   useEffect(() => {

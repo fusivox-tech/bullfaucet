@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, AlertTriangle, Trash2, Info, ListChecks, CheckCircle, Clock, Smartphone, Monitor, Play } from 'lucide-react';
+import { X, AlertTriangle, Trash2, Info, ListChecks, CheckCircle, Clock, Smartphone, Play } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 
 interface OfferDetailModalProps {
@@ -278,12 +278,6 @@ const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, of
                   <span className="px-2 py-0.5 rounded-full bg-white/5 text-zinc-400 text-[10px] font-bold uppercase tracking-wider">
                     {offer?.provider}
                   </span>
-                  {isStarted && (
-                    <span className="px-2 py-0.5 rounded-full bg-bull-orange/20 text-bull-orange text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
-                      <Play className="w-3 h-3" />
-                      In Progress
-                    </span>
-                  )}
                 </div>
 
                 {/* Device Icons */}
