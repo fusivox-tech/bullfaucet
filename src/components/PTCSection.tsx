@@ -343,8 +343,8 @@ const PTCSection: React.FC<PTCSectionProps> = ({
     
     const reward = calculateBitcoTaskReward(task.reward);
     setAlert({
-      message: `🪙 You earned ${reward} BULLFI!`,
-      type: "success"
+      message: `The bitcotasks ad has opened in a new tab. As this ad is managed by BitcoTasks, you will have to start and complete the ad in the BitcoTasks portal in order to be rewarded.`,
+      type: "info"
     });
     
     onBitcoTaskComplete(task.id, reward);

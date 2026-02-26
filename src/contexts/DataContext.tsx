@@ -464,7 +464,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const timer = setTimeout(() => {
         setAlertActive(false);
         setAlert({message: '', type: ''});
-      }, 10000);
+      }, 15000);
 
       return () => clearTimeout(timer);
     }
