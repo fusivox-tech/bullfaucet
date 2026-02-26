@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Users, ChevronDown, ChevronUp, Copy, Share2, Facebook, Twitter, MessageCircle, Send } from 'lucide-react';
+import { Users, ChevronDown, ChevronUp, Copy, Share2, Facebook, Twitter, MessageCircle, Send, Search } from 'lucide-react';
 import { User } from '../types';
 import { useData } from '../contexts/DataContext';
 import ShareModal from './ShareModal';
@@ -20,14 +20,20 @@ const ReferralSection: React.FC<ReferralSectionProps> = ({ user }) => {
   const [showDetail, setShowDetail] = useState<number | null>(null);
   const [shareModal, setShareModal] = useState({ isOpen: false, platform: null as string | null });
   const [currentPage, setCurrentPage] = useState(0);
+  const [searchTerm, setSearchTerm] = useState('');
   const itemsPerPage = 5;
 
   const totalReferrals = user?.referrals?.length || 0;
   const totalReferralEarning = user?.totalReferralEarningUsd || 0;
 
+  // Filter referrals based on search term
+  const filteredReferrals = referralUsers.filter(referral => 
+    referral.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const startIndex = currentPage * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentUsers = referralUsers.slice(startIndex, endIndex);
+  const currentUsers = filteredReferrals.slice(startIndex, endIndex);
 
   const getRegistrationDate = (objectId: string) => {
     const timestamp = objectId.toString().substring(0, 8);
@@ -105,7 +111,7 @@ const handleShare = (fullText: string) => {
 };
 
   const nextPage = () => {
-    if (endIndex < referralUsers.length) {
+    if (endIndex < filteredReferrals.length) {
       setCurrentPage(currentPage + 1);
     }
   };
@@ -114,6 +120,11 @@ const handleShare = (fullText: string) => {
     if (currentPage > 0) {
       setCurrentPage(currentPage - 1);
     }
+  };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(0); // Reset to first page when searching
   };
 
   return (
@@ -265,75 +276,103 @@ const handleShare = (fullText: string) => {
           </div>
         ) : referralUsers.length > 0 ? (
           <div className="space-y-3">
-            {currentUsers.map((referral, index) => (
-              <div key={index} className="p-4 rounded-xl bg-white/5 border border-white/10">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={referral.profileImage || "/abstract.jpg"}
-                      alt={referral.name}
-                      className="w-10 h-10 rounded-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = "/abstract.jpg";
-                      }}
-                    />
-                    <div>
-                      <p className="font-bold">{referral.name}</p>
-                      <p className="text-xs text-zinc-500">
-                        Joined {formatRegistrationDate(referral._id)}
-                      </p>
-                    </div>
-                  </div>
+            {/* Search Box - Only show if more than 10 referrals */}
+            {referralUsers.length > 10 && (
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                <input
+                  type="text"
+                  placeholder="Search by name..."
+                  value={searchTerm}
+                  onChange={handleSearch}
+                  className="w-full bg-bull-dark border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-bull-orange transition-colors"
+                />
+                {searchTerm && (
                   <button
-                    onClick={() => setShowDetail(showDetail === index ? null : index)}
-                    className="w-8 h-8 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-all"
+                    onClick={() => setSearchTerm('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
                   >
-                    {showDetail === index ? (
-                      <ChevronUp size={16} />
-                    ) : (
-                      <ChevronDown size={16} />
-                    )}
+                    ✕
                   </button>
-                </div>
-
-                {showDetail === index && (
-                  <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-[10px] text-zinc-500 font-bold uppercase">Earned</p>
-                      <p className="font-bold">${(referral.earnings * tokenPrice).toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-zinc-500 font-bold uppercase">Spent</p>
-                      <p className="font-bold">${(referral.spendings * tokenPrice).toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-zinc-500 font-bold uppercase">Commission</p>
-                      <p className="font-bold text-emerald-400">${(referral.commissions * tokenPrice).toLocaleString()}</p>
-                    </div>
-                  </div>
                 )}
               </div>
-            ))}
+            )}
+
+            {currentUsers.length > 0 ? (
+              currentUsers.map((referral, index) => (
+                <div key={index} className="p-4 rounded-xl bg-white/5 border border-white/10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={referral.profileImage || "/abstract.jpg"}
+                        alt={referral.name}
+                        className="w-10 h-10 rounded-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "/abstract.jpg";
+                        }}
+                      />
+                      <div>
+                        <p className="font-bold">{referral.name}</p>
+                        <p className="text-xs text-zinc-500">
+                          Joined {formatRegistrationDate(referral._id)}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowDetail(showDetail === index ? null : index)}
+                      className="w-8 h-8 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-all"
+                    >
+                      {showDetail === index ? (
+                        <ChevronUp size={16} />
+                      ) : (
+                        <ChevronDown size={16} />
+                      )}
+                    </button>
+                  </div>
+
+                  {showDetail === index && (
+                    <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-3 gap-4">
+                      <div>
+                        <p className="text-[10px] text-zinc-500 font-bold uppercase">Earned</p>
+                        <p className="font-bold">${(referral.earnings * tokenPrice).toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-zinc-500 font-bold uppercase">Spent</p>
+                        <p className="font-bold">${(referral.spendings * tokenPrice).toLocaleString()}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-zinc-500 font-bold uppercase">Commission</p>
+                        <p className="font-bold text-emerald-400">${(referral.commissions * tokenPrice).toLocaleString()}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-zinc-400">No referrals match your search.</p>
+              </div>
+            )}
 
             {/* Pagination */}
-            {referralUsers.length > itemsPerPage && (
+            {filteredReferrals.length > itemsPerPage && (
               <div className="flex items-center justify-between pt-4">
                 <button
                   onClick={prevPage}
                   disabled={currentPage === 0}
                   className="w-8 h-8 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <ChevronUp size={16} className="rotate-90" />
+                  <ChevronDown size={16} className="rotate-90" />
                 </button>
                 <span className="text-sm text-zinc-400">
-                  Page {currentPage + 1} of {Math.ceil(referralUsers.length / itemsPerPage)}
+                  Page {currentPage + 1} of {Math.ceil(filteredReferrals.length / itemsPerPage)}
                 </span>
                 <button
                   onClick={nextPage}
-                  disabled={endIndex >= referralUsers.length}
+                  disabled={endIndex >= filteredReferrals.length}
                   className="w-8 h-8 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <ChevronDown size={16} className="rotate-90" />
+                  <ChevronUp size={16} className="rotate-90" />
                 </button>
               </div>
             )}
