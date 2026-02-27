@@ -126,8 +126,7 @@ export interface PTCAd {
 }
 
 export interface YieldFarm {
-  id: number;
-  _id?: string;
+  id: string | number;
   user_id: number;
   token: string;
   amount: number;
@@ -137,20 +136,26 @@ export interface YieldFarm {
   tierName?: string;
   startDate: string;
   endDate: string;
-  dailyYield: number; 
-  duration?: number;
+  dailyYield: number;
   claimed: number;
   totalYieldReceived?: number;
   totalYieldReceivedUsd?: number;
-  lastYieldProcessed?: string;
-  harvestedAt?: string;
-  status?: 'active' | 'harvested';
+  lastYieldProcessed?: string | null; // Allow null
   yieldsHistory?: Array<{
     amount: number;
     amountUsd: number;
     timestamp: string;
-    bullfiPrice: number;
+    bullfiPrice?: number;
   }>;
+  status?: 'active' | 'harvested';
+  harvestedAt?: string;
+  duration?: number;
+  apr?: number;
+  progress?: number;
+  daysPassed?: number;
+  daysRemaining?: number;
+  isPastEndDate?: boolean;
+  canHarvest?: boolean;
 }
 
 export interface Offer {

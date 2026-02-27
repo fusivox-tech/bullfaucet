@@ -1359,28 +1359,28 @@ const handleLock = async (data: any) => {
         };
       });
 
-      // Add new farm to local state with all the new fields
-      const newFarm: YieldFarm = {
-        id: responseData.farmId || Date.now(),
-        user_id: parseInt(user.id),
-        token,
-        amount,
-        amountUsd,
-        farm_type: farmType,
-        tierId: tierId,
-        tierName: farmType,
-        startDate: new Date().toISOString(),
-        endDate: new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString(),
-        dailyYield: rate,
-        claimed: 0,
-        status: 'active',
-        totalYieldReceived: 0,
-        totalYieldReceivedUsd: 0,
-        lastYieldProcessed: null,
-        yieldsHistory: [],
-        duration: days,
-        apr: tier?.apr || 0
-      };
+// Add new farm to local state with all the new fields
+const newFarm: YieldFarm = {
+  id: responseData.farmId || Date.now(),
+  user_id: parseInt(user.id),
+  token,
+  amount,
+  amountUsd,
+  farm_type: farmType,
+  tierId: tierId,
+  tierName: farmType,
+  startDate: new Date().toISOString(),
+  endDate: new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString(),
+  dailyYield: rate,
+  claimed: 0,
+  status: 'active',
+  totalYieldReceived: 0,
+  totalYieldReceivedUsd: 0,
+  lastYieldProcessed: undefined, // Change from null to undefined
+  yieldsHistory: [],
+  duration: days,
+  apr: tier?.apr || 0
+};
 
       setFarms(prev => [...prev, newFarm]);
       setAlert({ 
