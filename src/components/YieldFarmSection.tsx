@@ -360,7 +360,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
       </div>
 
       {/* Stats Dashboard */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="p-6 rounded-2xl glass border border-white/5">
           <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-2">Total Farm Value</p>
           <p className="text-2xl font-display font-bold">
