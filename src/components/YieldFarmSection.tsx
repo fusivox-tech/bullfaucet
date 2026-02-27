@@ -341,7 +341,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
     <div className="space-y-8">
       {/* Header */}
       <div className="p-8 rounded-[2rem] glass bg-gradient-to-br from-bull-orange/10 to-transparent border border-bull-orange/20">
-        <div className="max-w-2xl">
+        <div className="">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-3xl font-display font-bold">Yield Farming</h3>
             <button
@@ -353,7 +353,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
             </button>
           </div>
           <p className="text-zinc-400 leading-relaxed">
-            Lock your assets to earn passive daily returns. Yields are paid daily at 6 AM GMT directly to your BULLFI balance. 
+            Lock your assets to earn passive daily returns. Yields are paid daily at 6 AM UTC directly to your BULLFI balance. 
             Farms continue earning even after the lock period ends - harvest your principal once the lock period is over.
           </p>
         </div>
@@ -410,7 +410,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
               <h4 className="text-2xl font-display font-bold mb-2">
                 Start Your Farming Journey! 🌱
               </h4>
-              <p className="text-zinc-400 mb-4 max-w-lg">
+              <p className="text-zinc-400 mb-4">
                 You need at least <span className="text-bull-orange font-bold">$5</span> in your portfolio to start farming. 
                 Make your first deposit to unlock passive daily yields and grow your crypto!
               </p>
@@ -459,7 +459,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
           {/* Benefits badges */}
           <div className="relative mt-8 flex flex-wrap gap-3 justify-center border-t border-white/5 pt-6">
             <span className="px-3 py-1.5 rounded-full text-xs bg-white/5 text-zinc-300">
-              ⚡ Daily Yields at 6 AM GMT
+              ⚡ Daily Yields at 6 AM UTC
             </span>
             <span className="px-3 py-1.5 rounded-full text-xs bg-white/5 text-zinc-300">
               🔒 Lock Periods 10-360 Days
@@ -523,7 +523,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
                       </div>
                     </div>
 
-                    <div className="flex-1 max-w-md">
+                    <div className="flex-1">
                       <div className="flex items-center justify-between text-xs mb-1">
                         <span className="text-zinc-500">Lock Period</span>
                         <span className="font-mono">
@@ -796,7 +796,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
           onClick={() => setShowPlantModal(false)}
         >
           <div 
-            className="max-w-md w-full rounded-3xl glass border border-white/10 p-6"
+            className="w-full rounded-3xl glass border border-white/10 p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
@@ -991,7 +991,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
               {/* Terms Notice */}
               <p className="text-[10px] text-zinc-500 text-center">
                 <AlertCircle size={12} className="inline mr-1" />
-                Yields are paid daily at 6 AM GMT in BULLFI tokens. Farms continue earning after lock period ends.
+                Yields are paid daily at 6 AM UTC in BULLFI tokens. Farms continue earning after lock period ends.
               </p>
             </div>
           </div>
@@ -1005,7 +1005,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
           onClick={() => setShowYieldsHistoryModal(false)}
         >
           <div 
-            className="max-w-2xl w-full rounded-3xl glass border border-white/10 p-6 max-h-[90vh] overflow-y-auto scrollbar-hide pt-0"
+            className="w-full rounded-3xl glass border border-white/10 p-6 max-h-[90vh] overflow-y-auto scrollbar-hide pt-0"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between sticky top-0 bg-[#20242a] backdrop-blur-sm -m-6 p-6 border-b border-white/5 mb-12">
@@ -1072,7 +1072,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
           onClick={() => setShowInfoModal(false)}
         >
           <div 
-            className="max-w-2xl w-full rounded-3xl glass border border-white/10 p-6 max-h-[80vh] overflow-y-auto pt-0"
+            className="w-full rounded-3xl glass border border-white/10 p-6 max-h-[80vh] overflow-y-auto pt-0"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6 sticky top-0 bg-[#20242a] backdrop-blur-sm -m-6 p-6 border-b border-white/5">
@@ -1102,7 +1102,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
                     'Choose Your Token - Select from 5 supported tokens: BULLFI, SOL, BTC, BNB, or XRP',
                     'Select Your Tier - Choose from 6 tiers based on lock duration (10-360 days)',
                     'Lock Your Tokens - Deposit your tokens into the selected farm tier',
-                    'Earn Daily Yields - Yields are paid daily at 6 AM GMT directly to your BULLFI balance',
+                    'Earn Daily Yields - Yields are paid daily at 6 AM UTC directly to your BULLFI balance',
                     'Keep Earning - Farms continue earning daily yields even after the lock period ends',
                     'Harvest Principal - Once the lock period ends, you can harvest your principal anytime'
                   ].map((step, index) => (
@@ -1175,7 +1175,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
               <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10">
                 <h4 className="font-bold text-blue-400 mb-2">✨ Key Features</h4>
                 <ul className="space-y-2 text-sm text-zinc-400 list-disc pl-5">
-                  <li>Daily yields paid at 6 AM GMT directly to your BULLFI balance</li>
+                  <li>Daily yields paid at 6 AM UTC directly to your BULLFI balance</li>
                   <li>Farms continue earning even after the lock period ends</li>
                   <li>Harvest principal only after lock period is complete</li>
                   <li>Track all your yield payments in the Yield History section</li>

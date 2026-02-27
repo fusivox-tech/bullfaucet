@@ -343,7 +343,7 @@ const PTCSection: React.FC<PTCSectionProps> = ({
     
     const reward = calculateBitcoTaskReward(task.reward);
     setAlert({
-      message: `The bitcotasks ad has opened in a new tab. As this ad is managed by BitcoTasks, you have to complete the ad on BitcoTasks portal in order to be rewarded.`,
+      message: `The bitcotasks ad has opened in a new tab. As this ad is managed by BitcoTasks, you have to complete the ad on the BitcoTasks portal that just opened in order to be rewarded.`,
       type: "info"
     });
     
