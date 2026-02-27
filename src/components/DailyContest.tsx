@@ -151,10 +151,10 @@ export const DailyContest = () => {
       </div>
 
       {/* Combined Top 10 with Prize Distribution */}
-      <div className="glass p-8 rounded-3xl">
+      <div className="">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-          <h3 className="text-2xl font-display font-bold">Today's Top 10 & Prize Distribution</h3>
-          <div className="flex items-center gap-2 text-sm text-zinc-400">
+          <h3 className="text-2xl text-center font-display font-bold">Today's Top 10</h3>
+          <div className="flex items-center gap-2 text-sm text-zinc-400 justify-center">
             <Clock size={16} />
             <span>Contest ends at midnight UTC</span>
           </div>
@@ -181,7 +181,7 @@ export const DailyContest = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className={`grid grid-cols-1 md:grid-cols-12 gap-4 p-4 rounded-xl border transition-colors bg-[#20242a] border-[#20242a]`}
+                className={`grid grid-cols-1 md:grid-cols-12 gap-4 border transition-colors glass p-8 rounded-3xl mb-4`}
               >
                 {/* Rank */}
                 <div className="flex items-center gap-3 md:col-span-1">
@@ -223,7 +223,7 @@ export const DailyContest = () => {
 
                 {/* Prize Amount */}
                 <div className="md:col-span-3">
-                  <p className="md:hidden text-xs text-zinc-500 mb-1">Prize Amount</p>
+                  <p className="md:hidden text-xs text-zinc-500 mb-1">Prize</p>
                   <div>
                     <p className={`font-mono font-bold ${index === 0 ? 'text-yellow-400' : 'text-emerald-400'}`}>
                       {formatAmount(prizeAmount)} BULLFI
@@ -248,14 +248,14 @@ export const DailyContest = () => {
       </div>
 
       {/* Yesterday's Winner */}
-      <div className="glass p-8 rounded-3xl">
-        <div className="flex items-center justify-between mb-6">
+      <div className="">
+        <div className="flex items-center justify-between mb-6 flex-col md:flex-row">
           <h3 className="text-2xl font-display font-bold flex items-center gap-3">
             <Trophy className="w-6 h-6 text-yellow-400" />
             Yesterday's Champion
           </h3>
           {yesterdayWinner && (
-            <span className="text-sm text-zinc-500">
+            <span className="text-sm text-center text-zinc-500">
               {new Date(yesterdayWinner.contestDate).toLocaleDateString('en-US', {
                 weekday: 'long',
                 month: 'short',
@@ -310,7 +310,7 @@ export const DailyContest = () => {
             {/* Other Top Winners */}
             {yesterdayWinner.winners.length > 1 && (
               <div>
-                <h4 className="font-bold mb-4">Top 5 Winners</h4>
+                <h4 className="font-bold mb-4 text-center">Top 5 Winners</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
                   {yesterdayWinner.winners.slice(0, 5).map((winner: ContestWinner) => (
                     <div key={winner.userId} className="p-3 rounded-xl bg-white/5 border border-white/10 text-center">
@@ -348,8 +348,8 @@ export const DailyContest = () => {
       </div>
 
       {/* Contest History */}
-      <div className="glass p-8 rounded-3xl">
-        <div className="flex items-center justify-between mb-6">
+      <div className="">
+        <div className="flex items-center justify-between mb-6 flex-col md:flex-row">
           <h3 className="text-2xl font-display font-bold">Recent Contest History</h3>
           <span className="text-sm text-zinc-500 flex items-center gap-1">
             <Clock size={14} />
@@ -447,9 +447,6 @@ export const DailyContest = () => {
             <div key={index} className="p-4 rounded-xl bg-white/5 border border-white/10 text-center">
               <p className="text-xs text-zinc-500 mb-1">#{index + 1} Place</p>
               <p className="text-2xl font-bold text-bull-orange">{percentage}%</p>
-              <p className="text-xs text-zinc-500 mt-1">
-                ≈ ${(percentage / 100 * (todayContest?.prizePool || 1000) * tokenPrice).toFixed(2)}
-              </p>
             </div>
           ))}
         </div>
