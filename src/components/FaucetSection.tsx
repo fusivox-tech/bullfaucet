@@ -5,6 +5,7 @@ import { User, FaucetClaim, FaucetToken } from '../types';
 import Counter from './Counter';
 import confetti from 'canvas-confetti';
 import API_BASE_URL from '../config';
+import { useData } from '../contexts/DataContext';
 
 interface DailyActivity {
   ptcToday: number;
@@ -45,7 +46,7 @@ const FaucetSection: React.FC<FaucetSectionProps> = ({
   binancePrice,
   ripplePrice
 }) => {
-  // Define faucet tokens using the exact icons from your types
+
   const faucetTokens: FaucetToken[] = useMemo(() => [
     {
       id: 'BULLFI',
@@ -114,7 +115,7 @@ const FaucetSection: React.FC<FaucetSectionProps> = ({
     }
   ], [tokenPrice, solanaPrice, bitcoinPrice, binancePrice, ripplePrice]);
 
-  const [selectedToken, setSelectedToken] = useState<FaucetToken>(faucetTokens[0]);
+  const { selectedToken, setSelectedToken } = useData();
   const [showTokenSelector, setShowTokenSelector] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
   
