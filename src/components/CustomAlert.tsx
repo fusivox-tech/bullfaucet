@@ -14,13 +14,18 @@ const CustomAlert = () => {
   
   // Auto-close after 10 seconds
   useEffect(() => {
-    if (isAlertActive) {
+    if (isAlertActive && alert.type === "info") {
       const timer = setTimeout(() => {
         handleCloseAlert();
       }, 30000);
       return () => clearTimeout(timer);
+    } else if (isAlertActive) {
+      const timer = setTimeout(() => {
+        handleCloseAlert();
+      }, 10000);
+      return () => clearTimeout(timer);
     }
-  }, [isAlertActive, handleCloseAlert]);
+  }, [isAlertActive, handleCloseAlert, alert.type]);
 
   const getAlertColor = () => {
     switch (alert.type) {
