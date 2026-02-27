@@ -17,7 +17,7 @@ const CustomAlert = () => {
     if (isAlertActive) {
       const timer = setTimeout(() => {
         handleCloseAlert();
-      }, 10000);
+      }, 30000);
       return () => clearTimeout(timer);
     }
   }, [isAlertActive, handleCloseAlert]);
