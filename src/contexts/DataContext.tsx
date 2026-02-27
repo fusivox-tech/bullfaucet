@@ -1308,89 +1308,102 @@ const handleAdComplete = (adId: string, reward: number) => {  // Changed from nu
     }
   }, [getAuthHeaders, handleAuthError]);
 
-  // Updated handleLock function to work with backend
-  const handleLock = async (data: any) => {
-    const { token, amount, farmType, days, rate } = data;
-    const balanceKey = getBalanceKey(token);
-    
-    if (!user || (user[balanceKey] as number) < amount) {
-      setAlert({ message: "Insufficient balance", type: 'error' });
-      return;
-    }
+const handleLock = async (data: any) => {
+  const { token, amount, farmType, days, rate, tierId } = data; // Added tierId here
+  const balanceKey = getBalanceKey(token);
+  
+  if (!user || (user[balanceKey] as number) < amount) {
+    setAlert({ message: "Insufficient balance", type: 'error' });
+    return;
+  }
 
-    // Calculate USD value for minimum amount check
-    const tokenPrice = prices[token] || 0;
-    const amountUsd = amount * tokenPrice;
+  // Calculate USD value for minimum amount check
+  const tokenPrice = prices[token] || 0;
+  const amountUsd = amount * tokenPrice;
 
-    // Check minimum USD requirement based on farm type
-    const tier = YIELD_TIERS.find((t: typeof YIELD_TIERS[0]) => t.name === farmType);
-    if (tier && amountUsd < tier.minAmountUsd) {
-      setAlert({ 
-        message: `Minimum amount for ${farmType} is $${tier.minAmountUsd}`, 
-        type: 'error' 
-      });
-      return;
-    }
+  // Check minimum USD requirement based on farm type
+  const tier = YIELD_TIERS.find((t: typeof YIELD_TIERS[0]) => t.name === farmType);
+  if (tier && amountUsd < tier.minAmountUsd) {
+    setAlert({ 
+      message: `Minimum amount for ${farmType} is $${tier.minAmountUsd}`, 
+      type: 'error' 
+    });
+    return;
+  }
 
-    try {
-      const headers = getAuthHeaders();
-      const response = await fetch(`https://payment.bullfaucet.com/api/yield-farm/create`, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify({
-          token: token,
-          amount: amount,
-          tierName: farmType,
-          duration: days,
-          dailyYield: rate * 100,
-          apr: tier?.apr || 0
-        })
-      });
+  try {
+    const headers = getAuthHeaders();
+    const response = await fetch(`https://payment.bullfaucet.com/api/yield-farm/create`, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({
+        token: token,
+        amount: amount,
+        tierId: tierId, // Add tierId to the request body
+        tierName: farmType,
+        duration: days,
+        dailyYield: rate * 100,
+        apr: tier?.apr || 0
+      })
+    });
 
-      const responseData = await response.json();
+    const responseData = await response.json();
 
-      if (response.ok) {
-        // Update local user balance
-        setUser((prev: any) => {
-          if (!prev) return null;
-          return {
-            ...prev,
-            [balanceKey]: (prev[balanceKey] as number) - amount
-          };
-        });
-
-        // Add new farm to local state
-        const newFarm: YieldFarm = {
-          id: responseData.farmId || Date.now(),
-          user_id: parseInt(user.id),
-          token,
-          amount,
-          farm_type: farmType,
-          startDate: new Date().toISOString(),
-          endDate: new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString(),
-          dailyYield: rate,
-          claimed: 0
+    if (response.ok) {
+      // Update local user balance
+      setUser((prev: any) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          [balanceKey]: (prev[balanceKey] as number) - amount
         };
+      });
 
-        setFarms(prev => [...prev, newFarm]);
-        setAlert({ 
-          message: `Successfully locked ${amount} ${token} in ${farmType} farm!`, 
-          type: 'success' 
-        });
-      } else {
-        setAlert({ 
-          message: responseData.message || 'Failed to create farm', 
-          type: 'error' 
-        });
-      }
-    } catch (error) {
-      console.error('Error creating farm:', error);
+      // Add new farm to local state with all the new fields
+      const newFarm: YieldFarm = {
+        id: responseData.farmId || Date.now(),
+        user_id: parseInt(user.id),
+        token,
+        amount,
+        amountUsd,
+        farm_type: farmType,
+        tierId: tierId,
+        tierName: farmType,
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString(),
+        dailyYield: rate,
+        claimed: 0,
+        status: 'active',
+        totalYieldReceived: 0,
+        totalYieldReceivedUsd: 0,
+        lastYieldProcessed: null,
+        yieldsHistory: [],
+        duration: days,
+        apr: tier?.apr || 0
+      };
+
+      setFarms(prev => [...prev, newFarm]);
       setAlert({ 
-        message: 'Network error. Please try again.', 
+        message: `Successfully locked ${amount} ${token} in ${farmType} farm!`, 
+        type: 'success' 
+      });
+      
+      // Refresh farms to get updated data from backend
+      await fetchActiveFarms();
+    } else {
+      setAlert({ 
+        message: responseData.message || 'Failed to create farm', 
         type: 'error' 
       });
     }
-  };
+  } catch (error) {
+    console.error('Error creating farm:', error);
+    setAlert({ 
+      message: 'Network error. Please try again.', 
+      type: 'error' 
+    });
+  }
+};
 
   const fetchReferralDetails = useCallback(async (referralIds: string[]) => {
     if (!referralIds || referralIds.length === 0) {
