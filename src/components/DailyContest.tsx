@@ -13,7 +13,8 @@ export const DailyContest = () => {
     userRank,
     loadingContest,
     tokenPrice,
-    expandedContest
+    expandedContest,
+    toggleContestExpansion
   } = useData();
   
   const [timeLeft, setTimeLeft] = useState('');
@@ -150,9 +151,9 @@ export const DailyContest = () => {
         )}
       </div>
 
-      {/* Combined Top 10 with Prize Distribution */}
+      {/* Combined Top 10 with Prize Distribution - FIXED SPACING ISSUE */}
       <div className="">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <h3 className="text-2xl text-center font-display font-bold">Today's Top 10</h3>
           <div className="flex items-center gap-2 text-sm text-zinc-400 justify-center">
             <Clock size={16} />
@@ -160,16 +161,16 @@ export const DailyContest = () => {
           </div>
         </div>
 
-        {/* Table Header */}
-        <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-2 text-xs text-zinc-500 font-bold uppercase tracking-wider border-b border-white/10 mb-2">
+        {/* Table Header - Fixed column spans */}
+        <div className="hidden md:grid grid-cols-12 gap-2 px-4 py-2 text-xs text-zinc-500 font-bold uppercase tracking-wider border-b border-white/10 mb-2">
           <div className="col-span-1">Rank</div>
           <div className="col-span-4">User</div>
-          <div className="col-span-2">Earnings Today</div>
-          <div className="col-span-3">Prize Amount</div>
+          <div className="col-span-3">Earnings Today</div>
+          <div className="col-span-4">Prize Amount</div>
         </div>
 
-        {/* Table Body */}
-        <div className="space-y-2">
+        {/* Table Body - Fixed column spans and removed extra padding/margin */}
+        <div className="space-y-4">
           {todayContest?.participants?.slice(0, 10).map((participant: ContestParticipant, index: number) => {
             const prizePercentage = prizePercentages[index] || 0;
             const prizeAmount = ((todayContest?.prizePool || 0) * prizePercentage) / 100;
@@ -181,10 +182,10 @@ export const DailyContest = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className={`grid grid-cols-1 md:grid-cols-12 gap-4 border transition-colors glass p-8 rounded-3xl mb-4`}
+                className="grid grid-cols-2 md:grid-cols-12 gap-2 p-4 rounded-xl glass border border-white/5 hover:border-bull-orange/20 transition-all"
               >
-                {/* Rank */}
-                <div className="flex items-center gap-3 md:col-span-1">
+                {/* Rank - Mobile: Full width, Desktop: col-span-1 */}
+                <div className="col-span-2 md:col-span-1 flex items-center gap-2 md:gap-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                     index === 0 ? 'bg-yellow-500 text-black' : 
                     index === 1 ? 'bg-zinc-300 text-black' : 
@@ -196,39 +197,57 @@ export const DailyContest = () => {
                   <span className="md:hidden text-xs text-zinc-500">Rank #{index + 1}</span>
                 </div>
 
-                {/* User Info */}
-                <div className="flex items-center gap-3 md:col-span-4">
-                  <div className="w-10 h-10 rounded-full overflow-hidden bg-bull-dark">
+                {/* User Info - Desktop: col-span-4, Hidden on mobile (shown below) */}
+                <div className="hidden md:flex md:col-span-4 items-center gap-3">
+                  <div className="w-8 h-8 rounded-full overflow-hidden bg-bull-dark flex-shrink-0">
                     {participant.profileImage ? (
                       <img src={participant.profileImage} alt={participant.fullName} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-bull-orange/20 text-bull-orange font-bold">
+                      <div className="w-full h-full flex items-center justify-center bg-bull-orange/20 text-bull-orange font-bold text-sm">
                         {participant.fullName?.charAt(0) || 'U'}
                       </div>
                     )}
                   </div>
-                  <div>
-                    <p className="font-bold">{participant.fullName || 'Anonymous'}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-sm truncate">{participant.fullName || 'Anonymous'}</p>
                     {flag && (
-                      <img src={flag} alt={participant.country} className="w-5 h-5 object-cover rounded" />
+                      <img src={flag} alt={participant.country} className="w-4 h-4 object-cover rounded mt-0.5" />
                     )}
                   </div>
                 </div>
 
-                {/* Earnings Today */}
-                <div className="md:col-span-2">
-                  <p className="md:hidden text-xs text-zinc-500 mb-1">Earnings Today</p>
-                  <p className="font-mono font-bold">{formatAmount(participant.earningsToday || 0)} BULLFI</p>
+                {/* Mobile User Info - Full width on mobile */}
+                <div className="col-span-2 md:hidden flex items-center gap-2 mt-1">
+                  <div className="w-6 h-6 rounded-full overflow-hidden bg-bull-dark flex-shrink-0">
+                    {participant.profileImage ? (
+                      <img src={participant.profileImage} alt={participant.fullName} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-bull-orange/20 text-bull-orange font-bold text-xs">
+                        {participant.fullName?.charAt(0) || 'U'}
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-sm font-medium truncate">{participant.fullName || 'Anonymous'}</span>
+                  {flag && (
+                    <img src={flag} alt={participant.country} className="w-4 h-4 object-cover rounded ml-auto" />
+                  )}
                 </div>
 
-                {/* Prize Amount */}
-                <div className="md:col-span-3">
-                  <p className="md:hidden text-xs text-zinc-500 mb-1">Prize</p>
+                {/* Earnings Today - Desktop: col-span-3, Mobile: col-span-1 */}
+                <div className="col-span-1 md:col-span-3">
+                  <p className="md:hidden text-[10px] text-zinc-500 mb-0.5">Earnings</p>
+                  <p className="font-mono font-bold text-sm md:text-base">{formatAmount(participant.earningsToday || 0)}</p>
+                  <p className="md:hidden text-[8px] text-zinc-500">BULLFI</p>
+                </div>
+
+                {/* Prize Amount - Desktop: col-span-4, Mobile: col-span-1 */}
+                <div className="col-span-1 md:col-span-4">
+                  <p className="md:hidden text-[10px] text-zinc-500 mb-0.5">Prize</p>
                   <div>
-                    <p className={`font-mono font-bold ${index === 0 ? 'text-yellow-400' : 'text-emerald-400'}`}>
-                      {formatAmount(prizeAmount)} BULLFI
+                    <p className={`font-mono font-bold text-sm md:text-base ${index === 0 ? 'text-yellow-400' : 'text-emerald-400'}`}>
+                      {formatAmount(prizeAmount)}
                     </p>
-                    <p className="text-xs text-zinc-500">≈ ${(prizeAmount * tokenPrice).toFixed(2)}</p>
+                    <p className="text-[8px] md:text-xs text-zinc-500">≈ ${(prizeAmount * tokenPrice).toFixed(2)}</p>
                   </div>
                 </div>
               </motion.div>
@@ -311,7 +330,7 @@ export const DailyContest = () => {
             {yesterdayWinner.winners.length > 1 && (
               <div>
                 <h4 className="font-bold mb-4 text-center">Top 5 Winners</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
                   {yesterdayWinner.winners.slice(0, 5).map((winner: ContestWinner) => (
                     <div key={winner.userId} className="p-3 rounded-xl bg-white/5 border border-white/10 text-center">
                       <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-bull-orange/20 text-bull-orange text-sm font-bold mb-2">
@@ -347,7 +366,7 @@ export const DailyContest = () => {
         )}
       </div>
 
-      {/* Contest History */}
+      {/* Contest History - GRID LAYOUT FIXED */}
       <div className="">
         <div className="flex items-center justify-between mb-6 flex-col md:flex-row">
           <h3 className="text-2xl font-display font-bold">Recent Contest History</h3>
@@ -358,15 +377,18 @@ export const DailyContest = () => {
         </div>
 
         {contestHistory.length > 0 ? (
-          <div className="space-y-4">
+          // Fixed grid layout with min-width of 300px on larger screens
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {contestHistory.map((contest) => (
-              <div key={contest._id} className="p-4 rounded-xl bg-white/5 border border-white/10">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+              <div 
+                key={contest._id} 
+                className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-bull-orange/30 transition-all min-w-[300px]"
+              >
+                <div className="flex flex-col justify-between gap-3 mb-4">
                   <div>
                     <h4 className="font-bold text-lg">Round #{contest.contestRound}</h4>
                     <p className="text-xs text-zinc-500">
                       {new Date(contest.contestDate).toLocaleDateString('en-US', {
-                        weekday: 'long',
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric'
@@ -375,15 +397,15 @@ export const DailyContest = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-zinc-500">Prize Pool</p>
-                    <p className="text-xl font-bold text-bull-orange">{formatAmount(contest.prizePool)} BULLFI</p>
+                    <p className="text-lg font-bold text-bull-orange">{formatAmount(contest.prizePool)} BULLFI</p>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   {contest.winners.slice(0, expandedContest === contest._id ? 10 : 3).map((winner: ContestWinner) => (
                     <div key={winner.userId} className="flex items-center justify-between p-2 rounded-lg hover:bg-white/5 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full overflow-hidden bg-bull-dark">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-6 h-6 rounded-full overflow-hidden bg-bull-dark flex-shrink-0">
                           {winner.profileImage ? (
                             <img src={winner.profileImage} alt={winner.fullName} className="w-full h-full object-cover" />
                           ) : (
@@ -392,17 +414,26 @@ export const DailyContest = () => {
                             </div>
                           )}
                         </div>
-                        <div>
-                          <p className="font-bold text-sm">{winner.fullName?.split(' ')[0] || 'User'}</p>
+                        <div className="min-w-0">
+                          <p className="font-bold text-sm truncate">{winner.fullName?.split(' ')[0] || 'User'}</p>
                           <p className="text-xs text-zinc-500">Rank #{winner.rank}</p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-mono text-emerald-400">{formatAmount(winner.prizeAmount)} BULLFI</p>
-                        <p className="text-xs text-zinc-500">{winner.prizePercentage}% share</p>
+                      <div className="text-right flex-shrink-0 ml-2">
+                        <p className="text-sm font-mono text-emerald-400">{formatAmount(winner.prizeAmount)}</p>
+                        <p className="text-[10px] text-zinc-500">{winner.prizePercentage}%</p>
                       </div>
                     </div>
                   ))}
+                  
+                  {contest.winners.length > 3 && (
+                    <button 
+                      onClick={() => toggleContestExpansion(contest._id)}
+                      className="w-full mt-2 text-xs text-bull-orange hover:text-orange-400 transition-colors"
+                    >
+                      {expandedContest === contest._id ? 'Show less' : `View all ${contest.winners.length} winners`}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -442,7 +473,7 @@ export const DailyContest = () => {
       {/* Prize Distribution Table */}
       <div className="glass p-8 rounded-3xl">
         <h3 className="text-2xl font-display font-bold mb-6">Prize Distribution</h3>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
           {prizePercentages.map((percentage, index) => (
             <div key={index} className="p-4 rounded-xl bg-white/5 border border-white/10 text-center">
               <p className="text-xs text-zinc-500 mb-1">#{index + 1} Place</p>
