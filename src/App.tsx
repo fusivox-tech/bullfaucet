@@ -119,11 +119,7 @@ function AppContent() {
     };
   }, []);
   
-  const numericBalance = ((user?.bullfiBalance || 0) * tokenPrice) + 
-                        ((user?.bitcoinBalance || 0) * bitcoinPrice) + 
-                        ((user?.bnbBalance || 0) * binancePrice) + 
-                        ((user?.xrpBalance || 0) * ripplePrice) + 
-                        ((user?.solanaBalance || 0) * solanaPrice);
+  const numericBalance = ((user?.bullfiBalance || 0) * tokenPrice) + ((user?.bitcoinBalance || 0) * bitcoinPrice) + ((user?.bnbBalance || 0) * binancePrice) + ((user?.xrpBalance || 0) * ripplePrice) + ((user?.solanaBalance || 0) * solanaPrice);
 
   const balance = numericBalance < 0.02 ? 
     numericBalance.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 4 }) : 

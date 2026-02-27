@@ -275,7 +275,7 @@ const handleCoinClick = (coin: typeof COINS[0]) => {
               onClick={() => setIsPendingModalOpen(true)}
               className="text-bull-orange flex items-center gap-2 text-sm font-medium mt-2 hover:text-orange-400 transition-colors group"
             >
-              <span>${pendingBalance} Pending</span>
+              <span>${pendingBalance} on hold</span>
               <Info className="w-4 h-4 text-zinc-600 group-hover:text-bull-orange transition-colors" />
             </button>
           )}
