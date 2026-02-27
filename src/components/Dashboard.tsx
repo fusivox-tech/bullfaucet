@@ -34,10 +34,10 @@ const getBalanceKey = (coin: string) => {
 // Faucet unlock order with permanent unlock requirements
 const FAUCET_ORDER = [
   { id: 'BULLFI', name: 'BULLFI Faucet', ads: 10, permanentUsd: 2 },
-  { id: 'SOL', name: 'SOL Faucet', ads: 20, permanentUsd: 5 },
-  { id: 'XRP', name: 'XRP Faucet', ads: 30, permanentUsd: 10 },
-  { id: 'BNB', name: 'BNB Faucet', ads: 50, permanentUsd: 25 },
-  { id: 'BTC', name: 'BTC Faucet', ads: 100, permanentUsd: 100 },
+  { id: 'SOL', name: 'SOL Faucet', ads: 30, permanentUsd: 5 },
+  { id: 'XRP', name: 'XRP Faucet', ads: 50, permanentUsd: 10 },
+  { id: 'BNB', name: 'BNB Faucet', ads: 75, permanentUsd: 20 },
+  { id: 'BTC', name: 'BTC Faucet', ads: 100, permanentUsd: 50 },
 ];
 
 interface DashboardProps {
