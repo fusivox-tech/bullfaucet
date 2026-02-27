@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import API_BASE_URL from '../config';
 import { useCpxSurveys } from '../components/useCpxSurveys';
 import { 
@@ -115,6 +115,8 @@ interface DataContextType {
   setShowRegister: (show: boolean) => void;
   selectedOffer: Offer | null;
   setSelectedOffer: (offer: Offer | null) => void;
+  selectedFaucetToken: FaucetToken;
+  setSelectedFaucetToken: React.Dispatch<React.SetStateAction<FaucetToken>>;
   
   // Modal States
   isDepositModalOpen: boolean;
@@ -349,8 +351,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [binancePrice, setBinancePrice] = useState(0);
   const [ripplePrice, setRipplePrice] = useState(0);
   
-  const [selectedToken, setSelectedToken] = useState<FaucetToken>(faucetTokens[0]);
-  
   const faucetTokens: FaucetToken[] = useMemo(() => [
     {
       id: 'BULLFI',
@@ -418,6 +418,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       timestampField: 'lastBTCClaim'
     }
   ], [tokenPrice, solanaPrice, bitcoinPrice, binancePrice, ripplePrice]);
+  
+  const [selectedFaucetToken, setSelectedFaucetToken] = useState<FaucetToken>(faucetTokens[0]);
 
   const prices: Record<string, number> = {
     BULLFI: tokenPrice,
@@ -2004,8 +2006,8 @@ useEffect(() => {
     setIsNotificationLoading,
     fetchNotifications,
     
-    selectedToken,
-    setSelectedToken,
+    selectedFaucetToken,
+    setSelectedFaucetToken,
   };
 
   return (

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Briefcase, Lock, Unlock, Info, Volume2, VolumeX, ChevronDown } from 'lucide-react';
 import { User, FaucetClaim, FaucetToken } from '../types';
 import Counter from './Counter';
-import confetti from 'canvas-confetti';
+import confetti from 'canvas-confetti'; 
 import API_BASE_URL from '../config';
 import { useData } from '../contexts/DataContext';
 
@@ -115,7 +115,7 @@ const FaucetSection: React.FC<FaucetSectionProps> = ({
     }
   ], [tokenPrice, solanaPrice, bitcoinPrice, binancePrice, ripplePrice]);
 
-  const { selectedToken, setSelectedToken } = useData();
+  const { selectedFaucetToken: selectedToken, setSelectedFaucetToken: setSelectedToken } = useData();
   const [showTokenSelector, setShowTokenSelector] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
   
