@@ -1,7 +1,7 @@
-// YieldFarm.tsx
+// frontend/src/components/YieldFarmSection.tsx
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Sprout, Info, X, CheckCircle, AlertCircle, Lock, ChevronDown, Wallet, ArrowDownCircle } from 'lucide-react';
+import { Sprout, Info, X, CheckCircle, AlertCircle, ChevronDown, Wallet, ArrowDownCircle, Calendar, TrendingUp, Clock } from 'lucide-react';
 import { User, COINS, YieldFarm } from '../types';
 import { useData } from '../contexts/DataContext';
 
@@ -14,11 +14,13 @@ interface YieldFarmSectionProps {
     farmType: string;
     days: number;
     rate: number;
+    tierId: string;
   }) => void;
-  onDeposit?: () => void; // Add onDeposit prop
+  onDeposit?: () => void;
+  onHarvest?: (farmId: string) => Promise<void>;
 }
 
-// Yield tiers data (matching old app)
+// Yield tiers data
 const YIELD_TIERS = [
   {
     id: 'allotment',
@@ -131,15 +133,17 @@ const getTokens = (user: User | null, prices: Record<string, number>) => [
   }
 ];
 
-const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock, onDeposit }) => {
-  const { prices } = useData();
+const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock, onDeposit, onHarvest }) => {
+  const { prices, fetchActiveFarms } = useData();
   const [selectedTier, setSelectedTier] = useState<typeof YIELD_TIERS[0] | null>(null);
   const [showPlantModal, setShowPlantModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [showYieldsHistoryModal, setShowYieldsHistoryModal] = useState(false);
   const [plantAmount, setPlantAmount] = useState('');
   const [selectedCoin, setSelectedCoin] = useState('BULLFI');
   const [showTokenDropdown, setShowTokenDropdown] = useState(false);
   const [estimatedYield, setEstimatedYield] = useState({ daily: 0, total: 0, dailyUsd: 0, totalUsd: 0 });
+  const [harvestingFarmId, setHarvestingFarmId] = useState<string | null>(null);
   
   const tokenDropdownRef = useRef<HTMLDivElement>(null);
   const tiersContainerRef = useRef<HTMLDivElement>(null);
@@ -157,26 +161,18 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
   // Check if user has no farms and balance < $5
   const showDepositPrompt = farms.length === 0 && totalBalanceUsd < 5;
 
-  const totalPendingRewards = farms.reduce((total, farm) => {
-    const token = tokens.find(t => t.symbol === farm.token);
-    const tokenPrice = token?.price || 0;
-    const daysPassed = (Date.now() - new Date(farm.startDate).getTime()) / (1000 * 60 * 60 * 24);
-    const accrued = farm.amount * (farm.dailyYield / 100) * Math.min(daysPassed, farm.duration || 0);
-    return total + (accrued * tokenPrice);
-  }, 0);
-
-  // Calculate total yields received in USD
-  const totalYieldsReceived = farms.reduce((total, farm) => {
-    const token = tokens.find(t => t.symbol === farm.token);
-    const tokenPrice = token?.price || 0;
-    return total + ((farm.totalYieldReceived || 0) * tokenPrice);
-  }, 0);
-
-  // Calculate farm statistics
+  // Calculate total farm value
   const totalLockedValue = farms.reduce((total, farm) => {
-    return total + (farm.amountUsd || 0);
+    if (farm.status === 'active') {
+      return total + (farm.amountUsd || 0);
+    }
+    return total;
   }, 0);
 
+  // Calculate total yields received
+  const totalYieldsReceived = user?.lifetimeYieldReceivedUsd || 0;
+
+  // Calculate progress for a farm
   const calculateProgress = (farm: YieldFarm) => {
     const now = new Date().getTime();
     const start = new Date(farm.startDate).getTime();
@@ -186,28 +182,72 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
     return Math.min((elapsed / totalDuration) * 100, 100);
   };
 
+  // Calculate farm rewards
   const calculateFarmRewards = (farm: YieldFarm) => {
     const now = new Date().getTime();
     const start = new Date(farm.startDate).getTime();
-    const end = new Date(farm.endDate).getTime();
     const daysPassed = (now - start) / (1000 * 60 * 60 * 24);
-    const totalDays = farm.duration || 0;
     
-    const accrued = farm.amount * (farm.dailyYield / 100) * Math.min(daysPassed, totalDays);
-    const pending = farm.amount * (farm.dailyYield / 100) * Math.max(0, totalDays - daysPassed);
+    // Calculate daily yield amount
+    const dailyYieldAmount = farm.amount * ((farm.dailyYield || 0) / 100);
+    
+    // Total yields earned so far
+    const totalEarned = farm.totalYieldReceived || 0;
+    
+    // Check if yield was processed today
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const lastProcessed = farm.lastYieldProcessed ? new Date(farm.lastYieldProcessed) : null;
+    const earnedToday = lastProcessed && lastProcessed >= today;
+    
+    // Calculate USD value of total earned
+    const totalEarnedUsd = totalEarned * (prices.BULLFI || 0.01);
     
     return { 
-      accrued, 
-      pending,
-      total: accrued + pending,
-      canHarvest: now >= end
+      dailyYield: dailyYieldAmount,
+      dailyYieldUsd: dailyYieldAmount * (prices.BULLFI || 0.01),
+      earnedToday,
+      totalEarned,
+      totalEarnedUsd,
+      daysPassed: Math.floor(daysPassed)
     };
   };
 
+  // Format duration
   const formatDuration = (days: number) => {
     if (days < 30) return `${days} days`;
     if (days < 365) return `${Math.floor(days / 30)} months`;
     return `${Math.floor(days / 365)} year`;
+  };
+
+  // Format time until next yield
+  const getTimeUntilNextYield = () => {
+    const now = new Date();
+    const nextYield = new Date(now);
+    nextYield.setUTCHours(6, 0, 0, 0);
+    
+    if (now.getUTCHours() >= 6) {
+      nextYield.setUTCDate(nextYield.getUTCDate() + 1);
+    }
+    
+    const hoursLeft = (nextYield.getTime() - now.getTime()) / (1000 * 60 * 60);
+    const hours = Math.floor(hoursLeft);
+    const minutes = Math.floor((hoursLeft - hours) * 60);
+    
+    return { hours, minutes };
+  };
+
+  // Check if farm lock period is over
+  const isFarmLockPeriodOver = (farm: YieldFarm) => {
+    return new Date(farm.endDate) < new Date();
+  };
+
+  // Calculate days remaining for lock period
+  const getDaysRemaining = (farm: YieldFarm) => {
+    const now = new Date();
+    const end = new Date(farm.endDate);
+    if (now >= end) return 0;
+    return Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
   };
 
   // Calculate estimated yield when amount or tier changes
@@ -268,7 +308,8 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
       amount: amount,
       farmType: selectedTier.name,
       days: selectedTier.days,
-      rate: selectedTier.dailyRate / 100
+      rate: selectedTier.dailyRate / 100,
+      tierId: selectedTier.id
     });
 
     setShowPlantModal(false);
@@ -276,9 +317,25 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
     setSelectedTier(null);
   };
 
+  const handleHarvestClick = async (farmId: string) => {
+    if (!onHarvest) return;
+    
+    setHarvestingFarmId(farmId);
+    try {
+      await onHarvest(farmId);
+      await fetchActiveFarms(); // Refresh farms after harvest
+    } catch (error) {
+      console.error('Error harvesting farm:', error);
+    } finally {
+      setHarvestingFarmId(null);
+    }
+  };
+
   const minAmountInToken = selectedTier && selectedTokenInfo 
     ? selectedTier.minAmountUsd / selectedTokenInfo.price 
     : 0;
+
+  const timeUntilNextYield = getTimeUntilNextYield();
 
   return (
     <div className="space-y-8">
@@ -296,44 +353,44 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
             </button>
           </div>
           <p className="text-zinc-400 leading-relaxed">
-            Lock your assets in our specialized farms to earn passive daily returns. 
-            The longer you lock, the higher your yield. Rewards are paid in full upon maturity.
+            Lock your assets to earn passive daily returns. Yields are paid daily at 6 AM GMT directly to your BULLFI balance. 
+            Farms continue earning even after the lock period ends - harvest your principal once the lock period is over.
           </p>
         </div>
       </div>
 
       {/* Stats Dashboard */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="p-6 rounded-2xl glass border border-white/5">
           <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-2">Total Farm Value</p>
           <p className="text-2xl font-display font-bold">
             ${totalLockedValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
           <p className="text-xs text-zinc-500 mt-1">
-            {farms.length > 0 ? `${farms.length} Farms Active` : 'No active farms'}
+            {farms.filter(f => f.status === 'active').length} Active Farms
           </p>
         </div>
 
-        <div className="p-6 rounded-2xl glass border border-white/5">
-          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-2">Pending Yields</p>
-          <p className="text-2xl font-display font-bold text-emerald-400">
-            ${totalPendingRewards.toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-              })}
-          </p>
-          <p className="text-xs text-zinc-500 mt-1">{totalPendingRewards > 0 ? 'Accruing daily' : 'No pending yields'}</p>
-        </div>
-
-        <div className="p-6 rounded-2xl glass border border-white/5">
-          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-2">Total Yields Received</p>
+        <div className="p-6 relative rounded-2xl glass border border-white/5">
+          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-2">Lifetime Yields</p>
           <p className="text-2xl font-display font-bold">
             ${totalYieldsReceived.toLocaleString('en-US', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
               })}
           </p>
-          <p className="text-xs text-zinc-500 mt-1">{totalYieldsReceived > 0 ? 'All time' : 'Start farming!'}</p>
+          <div className="flex items-center gap-1 mt-1">
+            <Clock size={12} className="text-zinc-500" />
+            <p className="text-xs text-zinc-500">
+              Next yield in {timeUntilNextYield.hours}h {timeUntilNextYield.minutes}m
+            </p>
+          </div>
+          <button
+            onClick={() => setShowYieldsHistoryModal(true)}
+            className="text-xs absolute top-6 right-6 text-bull-orange hover:text-orange-400 transition-colors"
+          >
+            View History →
+          </button>
         </div>
       </div>
 
@@ -402,7 +459,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
           {/* Benefits badges */}
           <div className="relative mt-8 flex flex-wrap gap-3 justify-center border-t border-white/5 pt-6">
             <span className="px-3 py-1.5 rounded-full text-xs bg-white/5 text-zinc-300">
-              ⚡ Daily Yields
+              ⚡ Daily Yields at 6 AM GMT
             </span>
             <span className="px-3 py-1.5 rounded-full text-xs bg-white/5 text-zinc-300">
               🔒 Lock Periods 10-360 Days
@@ -411,53 +468,70 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
               💰 Multiple Tokens Supported
             </span>
             <span className="px-3 py-1.5 rounded-full text-xs bg-white/5 text-zinc-300">
-              🚀 Compound Your Earnings
+              🚀 Keep Earning After Lock
             </span>
           </div>
         </div>
       )}
 
       {/* Active Farms */}
-      {farms.length > 0 && (
+      {farms.filter(f => f.status === 'active').length > 0 && (
         <div className="space-y-4">
           <h4 className="font-display font-bold flex items-center gap-2">
             <Sprout size={20} className="text-bull-orange" />
             Your Active Farms
           </h4>
           
-          <div className="space-y-3">
-            {farms.map((farm) => {
+          <div className="space-y-4">
+            {farms.filter(f => f.status === 'active').map((farm) => {
               const progress = calculateProgress(farm);
               const rewards = calculateFarmRewards(farm);
               const tokenInfo = tokens.find(t => t.symbol === farm.token);
-              const rewardsValueUsd = rewards.accrued * (tokenInfo?.price || 0);
               const tier = YIELD_TIERS.find(t => t.id === farm.tierId);
+              const isLockPeriodOver = isFarmLockPeriodOver(farm);
+              const daysRemaining = getDaysRemaining(farm);
+              const isHarvesting = harvestingFarmId === String(farm.id);
 
               return (
                 <div key={farm.id} className="p-4 rounded-xl glass border border-white/5 hover:border-bull-orange/20 transition-all">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <img 
-                        src={tokenInfo?.image} alt={farm.token}
-                        className="w-8 h-8 object-contain"
+                        src={tokenInfo?.image} 
+                        alt={farm.token}
+                        className="w-10 h-10 object-contain"
                         referrerPolicy="no-referrer"
                       />
                       <div>
-                        <h5 className="font-bold">{farm.token} {tier?.name || farm.tierName} Farm</h5>
+                        <div className="flex items-center gap-2">
+                          <h5 className="font-bold text-lg">
+                            {farm.token} {tier?.name || farm.tierName} Farm
+                          </h5>
+                          {isLockPeriodOver && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                              Ready to Harvest
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-zinc-500">
                           {farm.token === 'BTC' 
                             ? farm.amount.toFixed(8) 
                             : farm.token === 'BULLFI' 
                               ? Math.round(farm.amount).toLocaleString()
-                              : farm.amount.toFixed(4)} {farm.token} · Started {new Date(farm.startDate).toLocaleDateString()}
+                              : farm.amount.toFixed(4)} {farm.token}
                         </p>
                       </div>
                     </div>
 
                     <div className="flex-1 max-w-md">
                       <div className="flex items-center justify-between text-xs mb-1">
-                        <span className="text-zinc-500">Progress</span>
-                        <span className="font-mono">{progress.toFixed(1)}%</span>
+                        <span className="text-zinc-500">Lock Period</span>
+                        <span className="font-mono">
+                          {isLockPeriodOver 
+                            ? 'Completed' 
+                            : `${daysRemaining} days left`
+                          }
+                        </span>
                       </div>
                       <div className="h-2 bg-white/5 rounded-full overflow-hidden">
                         <div 
@@ -467,29 +541,113 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4 justify-between">
-                      <div className="text-left md:text-right">
-                        <p className="text-xs text-zinc-500">Accrued</p>
-                        <p className="font-mono text-sm text-emerald-400 ml-0 pl-0">${rewardsValueUsd.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
-                      </div>
-                      
-                      {rewards.canHarvest ? (
-                        <button 
-                          className="px-4 py-2 rounded-xl bg-emerald-500 text-xs font-bold hover:bg-emerald-600 transition-all"
-                        >
-                          Harvest
-                        </button>
-                      ) : (
-                        <div className="flex items-center gap-1 text-xs text-zinc-500">
-                          <Lock size={12} />
-                          {Math.ceil((new Date(farm.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))} days left
-                        </div>
+                    <div className="flex items-center justify-between gap-6">
+                        <p className="text-[10px] text-zinc-500">Total Yield Earned</p>
+                        <p className="font-mono text-sm font-bold text-emerald-400">
+                          ${rewards.totalEarnedUsd.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 4})}
+                        </p>
+                        <p className="text-[10px] text-zinc-500">
+                          {(Math.round(rewards.totalEarned)).toLocaleString()} BULLFI
+                        </p>
+                    </div>
+
+                    {isLockPeriodOver && (
+                      <button
+                        onClick={() => handleHarvestClick(farm.id.toString())}
+                        disabled={isHarvesting}
+                        className={`px-6 py-3 rounded-xl font-bold transition-all ${
+                          isHarvesting
+                            ? 'bg-zinc-600 cursor-not-allowed'
+                            : 'bg-emerald-500 hover:bg-emerald-600 hover:scale-105 active:scale-95'
+                        }`}
+                      >
+                        {isHarvesting ? 'Harvesting...' : 'Harvest Principal'}
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Last yield info */}
+                  {farm.lastYieldProcessed && (
+                    <div className="mt-3 flex items-center gap-4 text-[10px] text-zinc-500 border-t border-white/5 pt-3">
+                      <span className="flex items-center gap-1">
+                        <Calendar size={10} />
+                        Last yield: {new Date(farm.lastYieldProcessed).toLocaleDateString()} at {new Date(farm.lastYieldProcessed).toLocaleTimeString()}
+                      </span>
+                      <span>Daily rate: {(farm.dailyYield || 0)}%</span>
+                      {isLockPeriodOver && (
+                        <span className="text-orange-400 flex items-center gap-1">
+                          <TrendingUp size={10} />
+                          Still earning daily
+                        </span>
                       )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Farms Ready to Harvest Summary */}
+      {farms.filter(f => f.status === 'active' && isFarmLockPeriodOver(f)).length > 0 && (
+        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+          <p className="text-sm text-emerald-400">
+            🎯 You have {farms.filter(f => f.status === 'active' && isFarmLockPeriodOver(f)).length} farm(s) ready to harvest!
+          </p>
+        </div>
+      )}
+
+      {/* Harvested Farms */}
+      {farms.filter(f => f.status === 'harvested').length > 0 && (
+        <div className="space-y-4">
+          <h4 className="font-display font-bold flex items-center gap-2 text-zinc-400">
+            <Sprout size={20} />
+            Harvested Farms
+          </h4>
+          
+          <div className="space-y-2">
+            {farms.filter(f => f.status === 'harvested').slice(0, 3).map((farm) => {
+              const tokenInfo = tokens.find(t => t.symbol === farm.token);
+              const tier = YIELD_TIERS.find(t => t.id === farm.tierId);
+              const totalEarned = farm.totalYieldReceived || 0;
+              const totalEarnedUsd = totalEarned * (prices.BULLFI || 0.01);
+
+              return (
+                <div key={farm.id} className="p-3 rounded-xl glass border border-white/5 opacity-75">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <img 
+                        src={tokenInfo?.image} 
+                        alt={farm.token}
+                        className="w-6 h-6 object-contain"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div>
+                        <p className="text-sm font-bold">{farm.token} {tier?.name || farm.tierName} Farm</p>
+                        <p className="text-[10px] text-zinc-500">
+                          Harvested {farm.harvestedAt ? new Date(farm.harvestedAt).toLocaleDateString() : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-emerald-400">
+                        ${totalEarnedUsd.toFixed(2)}
+                      </p>
+                      <p className="text-[10px] text-zinc-500">
+                        {totalEarned.toFixed(4)} BULLFI earned
+                      </p>
                     </div>
                   </div>
                 </div>
               );
             })}
+            
+            {farms.filter(f => f.status === 'harvested').length > 3 && (
+              <button className="text-xs text-bull-orange hover:text-orange-400 transition-colors w-full text-center py-2">
+                View all {farms.filter(f => f.status === 'harvested').length} harvested farms →
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -499,7 +657,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
         <div className="p-12 rounded-3xl glass border border-white/5 text-center">
           <Sprout size={48} className="mx-auto mb-4 text-bull-orange opacity-50" />
           <h4 className="text-xl font-display font-bold mb-2">No Active Farms</h4>
-          <p className="text-sm text-zinc-500 mb-6">Plant your first seed to start earning yields</p>
+          <p className="text-sm text-zinc-500 mb-6">Plant your first seed to start earning daily yields</p>
         </div>
       )}
 
@@ -513,7 +671,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
         </div>
       )}
 
-      {/* Yield Tiers - Desktop/Horizontal Scroll - Only show if not showing deposit prompt */}
+      {/* Yield Tiers - Desktop/Horizontal Scroll */}
       {!showDepositPrompt && (
         <div 
           ref={tiersContainerRef}
@@ -575,7 +733,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
         </div>
       )}
 
-      {/* Yield Tiers - Mobile/Grid Layout - Only show if not showing deposit prompt */}
+      {/* Yield Tiers - Mobile/Grid Layout */}
       {!showDepositPrompt && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:hidden">
           {YIELD_TIERS.map((tier) => (
@@ -709,7 +867,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
                               </div>
                               <div className="flex items-center justify-between text-xs">
                                 <span className="text-zinc-500">
-                                  {token.balance.toFixed(4)} {token.symbol}
+                                  {token.symbol === 'BULLFI' ? token.balance.toFixed(0) : token.symbol === 'BTC' ? token.balance.toFixed(8) : token.balance.toFixed(4)} {token.symbol}
                                 </span>
                                 <span className="text-zinc-500">
                                   ≈ ${tokenValueUsd.toFixed(2)}
@@ -751,7 +909,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
                 </div>
                 <div className="mt-2 flex justify-between text-[10px]">
                   <span className="text-zinc-500">
-                    Balance: {selectedTokenInfo?.balance.toFixed(selectedCoin === 'BTC' ? 8 : 4)} {selectedCoin}
+                    Balance: {selectedTokenInfo?.balance.toFixed(selectedCoin === 'BTC' ? 8 : selectedCoin === 'BULLFI' ? 0 : 4)} {selectedCoin}
                   </span>
                   <span className="text-zinc-500">
                     ≈ ${((selectedTokenInfo?.balance || 0) * (selectedTokenInfo?.price || 0)).toFixed(2)}
@@ -770,6 +928,9 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
                   disabled
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 font-mono opacity-50"
                 />
+                <p className="text-[10px] text-zinc-500 mt-1">
+                  Farms continue earning daily yields after lock period ends
+                </p>
               </div>
 
               {/* Yield Preview */}
@@ -800,7 +961,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
                 </div>
 
                 <div className="flex justify-between text-xs">
-                  <span className="text-zinc-500">Total Return</span>
+                  <span className="text-zinc-500">Total During Lock</span>
                   <span className="font-mono font-bold text-emerald-400">
                     {selectedCoin === 'BULLFI' 
                       ? Math.round(estimatedYield.total).toLocaleString()
@@ -812,22 +973,6 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
                   </span>
                 </div>
 
-                <div className="pt-2 border-t border-white/5">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-zinc-500">Total at Maturity</span>
-                    <span className="font-mono font-bold">
-                      {(parseFloat(plantAmount || '0') + estimatedYield.total).toFixed(
-                        selectedCoin === 'BTC' ? 8 : 4
-                      )} {selectedCoin}
-                      <span className="text-[10px] text-zinc-500 ml-1">
-                        ≈ ${(
-                          (parseFloat(plantAmount || '0') * (selectedTokenInfo?.price || 0)) + 
-                          estimatedYield.totalUsd
-                        ).toFixed(2)}
-                      </span>
-                    </span>
-                  </div>
-                </div>
               </div>
 
               {/* Submit Button */}
@@ -840,14 +985,81 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
                 }
                 className="w-full py-4 rounded-xl bg-gradient-to-r from-bull-orange to-orange-600 font-bold hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Confirm & Lock {parseFloat(plantAmount || '0').toFixed(selectedCoin === 'BTC' ? 8 : 4)} {selectedCoin}
+                Confirm & Lock {parseFloat(plantAmount || '0').toFixed(selectedCoin === 'BTC' ? 8 : selectedCoin === 'BULLFI' ? 0 : 4)} {selectedCoin}
               </button>
 
               {/* Terms Notice */}
               <p className="text-[10px] text-zinc-500 text-center">
                 <AlertCircle size={12} className="inline mr-1" />
-                Your tokens will be locked for {selectedTier.days} days. Yields are paid daily in BULLFI tokens.
+                Yields are paid daily at 6 AM GMT in BULLFI tokens. Farms continue earning after lock period ends.
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Yields History Modal */}
+      {showYieldsHistoryModal && (
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowYieldsHistoryModal(false)}
+        >
+          <div 
+            className="max-w-2xl w-full rounded-3xl glass border border-white/10 p-6 max-h-[90vh] overflow-y-auto scrollbar-hide pt-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between sticky top-0 bg-[#20242a] backdrop-blur-sm -m-6 p-6 border-b border-white/5 mb-12">
+              <h3 className="text-xl font-display font-bold">Yield Payment History</h3>
+              <button
+                onClick={() => setShowYieldsHistoryModal(false)}
+                className="w-8 h-8 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-all"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-4 pt-2">
+              {/* History List */}
+              {(user?.yieldsRecord || []).length === 0 ? (
+                <div className="text-center py-12">
+                  <Sprout size={48} className="mx-auto mb-4 text-zinc-600" />
+                  <p className="text-zinc-500">No yield payments yet</p>
+                  <p className="text-xs text-zinc-600 mt-2">Start farming to earn daily yields!</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {(user?.yieldsRecord || [])
+                    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+                    .map((yield_, index) => (
+                      <div key={index} className="p-4 rounded-xl bg-white/5 border border-white/10">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <Calendar size={14} className="text-zinc-500" />
+                            <span className="text-sm text-zinc-400">
+                              {new Date(yield_.timestamp).toLocaleDateString()} at {new Date(yield_.timestamp).toLocaleTimeString()}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-4">
+                          <div>
+                            <p className="text-[10px] text-zinc-500">Amount</p>
+                            <p className="text-sm font-bold">
+                              ${yield_.amountUsd.toFixed(2)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-zinc-500">From</p>
+                            <p className="text-sm">
+                              {yield_.token} {yield_.tierName} Farm
+                            </p>
+                          </div>
+                        </div>
+                        
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -890,8 +1102,9 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
                     'Choose Your Token - Select from 5 supported tokens: BULLFI, SOL, BTC, BNB, or XRP',
                     'Select Your Tier - Choose from 6 tiers based on lock duration (10-360 days)',
                     'Lock Your Tokens - Deposit your tokens into the selected farm tier',
-                    'Earn Daily Yields - Start earning daily yields based on your selected tier percentage',
-                    'Harvest at Maturity - After lock period ends, receive your principal + accumulated yields'
+                    'Earn Daily Yields - Yields are paid daily at 6 AM GMT directly to your BULLFI balance',
+                    'Keep Earning - Farms continue earning daily yields even after the lock period ends',
+                    'Harvest Principal - Once the lock period ends, you can harvest your principal anytime'
                   ].map((step, index) => (
                     <div key={index} className="flex items-start gap-3">
                       <div className="w-6 h-6 rounded-full bg-bull-orange/10 flex items-center justify-center flex-shrink-0">
@@ -959,12 +1172,22 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
                 </div>
               </div>
 
+              <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10">
+                <h4 className="font-bold text-blue-400 mb-2">✨ Key Features</h4>
+                <ul className="space-y-2 text-sm text-zinc-400 list-disc pl-5">
+                  <li>Daily yields paid at 6 AM GMT directly to your BULLFI balance</li>
+                  <li>Farms continue earning even after the lock period ends</li>
+                  <li>Harvest principal only after lock period is complete</li>
+                  <li>Track all your yield payments in the Yield History section</li>
+                </ul>
+              </div>
+
               <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/10">
                 <h4 className="font-bold text-red-400 mb-2">Important Notice</h4>
                 <ul className="space-y-2 text-sm text-zinc-400 list-disc pl-5">
-                  <li>Your tokens are locked for the selected duration and cannot be withdrawn early</li>
-                  <li>Yields are calculated daily and paid in BULLFI tokens</li>
-                  <li>All yields are based on the USD value of the planted asset at the time of farm creation</li>
+                  <li>Your tokens are locked until the lock period ends</li>
+                  <li>Yields are calculated based on the USD value at farm creation</li>
+                  <li>All yields are paid in BULLFI tokens at current market rate</li>
                   <li>Market conditions may affect token prices during lock period</li>
                   <li>Yields begin accruing immediately after farm creation</li>
                 </ul>

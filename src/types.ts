@@ -73,6 +73,18 @@ export interface User {
     date: string;
     expiresAt?: string;
   }>;
+  
+  yieldsRecord?: Array<{
+    farmId: string;
+    amount: number;
+    amountUsd: number;
+    timestamp: string;
+    token: string;
+    tierName: string;
+    bullfiPrice: number;
+  }>;
+  lifetimeYieldReceived?: number;
+  lifetimeYieldReceivedUsd?: number;
 }
 
 export interface ReferralUser {
@@ -129,7 +141,16 @@ export interface YieldFarm {
   duration?: number;
   claimed: number;
   totalYieldReceived?: number;
-  status?: string;
+  totalYieldReceivedUsd?: number;
+  lastYieldProcessed?: string;
+  harvestedAt?: string;
+  status?: 'active' | 'harvested';
+  yieldsHistory?: Array<{
+    amount: number;
+    amountUsd: number;
+    timestamp: string;
+    bullfiPrice: number;
+  }>;
 }
 
 export interface Offer {
