@@ -26,6 +26,7 @@ import CustomAlert from "./components/CustomAlert";
 import NotificationPrompt from './components/NotificationPrompt'
 import Notifications from './components/Notifications';
 import MyAds from './components/MyAds';
+import LoadingScreen from './components/LoadingScreen';
 
 function AppContent() {
   const {
@@ -40,9 +41,7 @@ function AppContent() {
     claims,
     ads,
     farms,
-    bitcoTasks,
     bitcoTasksLoading,
-    dailyActivity,
     
     // Token Prices
     tokenPrice,
@@ -79,6 +78,10 @@ function AppContent() {
     handleWithdraw,
     handleSwap,
     handleOfferComplete,
+    
+    bitcoTasks,
+    dailyActivity,
+    transactions,
   } = useData();
   
   const navigate = useNavigate();
@@ -88,6 +91,8 @@ function AppContent() {
   const [isNotificationPromptVisible, setIsNotificationPromptVisible] = useState(false);
   const [isNoteOpen, setIsNoteOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isDataLoading, setIsDataLoading] = useState(true);
   
   // Get current active tab from path
   const activeTab = location.pathname.slice(1) || 'dashboard';
@@ -126,10 +131,44 @@ function AppContent() {
     numericBalance.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 4 }) : 
     numericBalance.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
+  // Determine if all essential data is loaded
+  useEffect(() => {
+
+    const essentialDataLoaded = 
+      user !== null &&
+      ads !== undefined &&
+      farms !== undefined &&
+      dailyActivity !== undefined;
+
+    if (essentialDataLoaded) {
+      // Add a small delay for smooth transition
+      const timer = setTimeout(() => {
+        setIsDataLoading(false);
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+
+    // Update progress based on what's loaded
+    let loadedCount = 0;
+    const totalItems = 5; // user, ads, farms, dailyActivity, transactions
+    
+    if (user) loadedCount++;
+    if (ads) loadedCount++;
+    if (farms) loadedCount++;
+    if (dailyActivity) loadedCount++;
+    if (transactions) loadedCount++;
+    
+    setLoadingProgress((loadedCount / totalItems) * 100);
+  }, [isAuthenticated, user, ads, farms, dailyActivity, transactions]);
+
+  // Enhanced auth checking with progress
   if (isCheckingAuth) {
-    return <div className="min-h-screen bg-bull-dark flex items-center justify-center">
-      <div className="w-8 h-8 border-4 border-bull-orange border-t-transparent rounded-full animate-spin"></div>
-    </div>;
+    return (
+      <LoadingScreen 
+        message="Verifying your credentials..."
+      />
+    );
   }
 
   if (!isAuthenticated) {
@@ -153,6 +192,15 @@ function AppContent() {
           onRegisterSuccess={handleLoginSuccess}
         />
       </>
+    );
+  }
+
+  // Show loading screen while data is being fetched
+  if (isDataLoading) {
+    return (
+      <LoadingScreen 
+        message={`Loading your dashboard... ${Math.round(loadingProgress)}%`}
+      />
     );
   }
 

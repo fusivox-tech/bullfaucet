@@ -113,7 +113,7 @@ const Navbar: React.FC<NavbarProps> = ({
             <img 
               onClick={handleLogoClick}
               src="https://res.cloudinary.com/danuehpic/image/upload/v1771869182/wordmark_pynw6f.png" 
-              alt="Bull Faucet" 
+              alt="BullFaucet Wordmark" 
               className="h-8 object-contain cursor-pointer" 
               referrerPolicy="no-referrer" 
             />
