@@ -507,11 +507,6 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
                           <h5 className="font-bold text-lg">
                             {farm.token} {tier?.name || farm.tierName} Farm
                           </h5>
-                          {isLockPeriodOver && (
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20">
-                              Ready to Harvest
-                            </span>
-                          )}
                         </div>
                         <p className="text-xs text-zinc-500">
                           {farm.token === 'BTC' 
