@@ -488,6 +488,8 @@ export const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
     setIsOtpModalOpen(false);
     setIsLoading(true);
     
+    const referrerId = localStorage.getItem("bullFaucetReferrerId");
+    
     try {
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: "POST",
@@ -499,7 +501,8 @@ export const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, onRegisterSucc
           country: selectedCountry, 
           password, 
           otp, 
-          recaptchaToken 
+          referrerId,
+          recaptchaToken,
         }),
       });
 
