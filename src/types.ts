@@ -126,7 +126,7 @@ export interface PTCAd {
 }
 
 export interface YieldFarm {
-  id: string | number;
+  _id: string;
   user_id: number;
   token: string;
   amount: number;

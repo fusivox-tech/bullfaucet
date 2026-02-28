@@ -75,6 +75,7 @@ function AppContent() {
     handleAdComplete,
     handleBitcoTaskComplete,
     handleLock,
+    handleHarvest,
     handleWithdraw,
     handleSwap,
     handleOfferComplete,
@@ -277,6 +278,7 @@ function AppContent() {
                 user={user} 
                 farms={farms} 
                 onLock={handleLock} 
+                onHarvest={handleHarvest}
                 onDeposit={() => setIsDepositModalOpen(true)}
               />
             } 

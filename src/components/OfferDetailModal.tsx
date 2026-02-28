@@ -60,52 +60,60 @@ const OfferDetailModal: React.FC<OfferDetailModalProps> = ({ isOpen, onClose, of
     setDeviceType(detectDevice());
   }, []);
 
-  const handleStartOffer = async () => {
-    setIsStarting(true);
+const handleStartOffer = async () => {
+  setIsStarting(true);
+  
+  try {
+    // Check if this is a survey - skip tracking for surveys
+    const isSurvey = offer?.type?.toLowerCase() === 'survey' || 
+                     offer?.category?.toLowerCase() === 'survey' ||
+                     offer?.title?.toLowerCase().includes('survey');
     
-    try {
-      // Track offer start
-      if (user?._id && offer) {
-        try {
-          await fetch('https://payment.bullfaucet.com/api/announcements/track-offer-start', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
+    // Only track non-survey offers
+    if (!isSurvey && user?._id && offer) {
+      try {
+        await fetch('https://payment.bullfaucet.com/api/announcements/track-offer-start', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: user._id,
+            offer: {
+              id: offer?.id,
+              name: offer?.title,
+              source: offer?.provider,
+              payout: offer?.reward_usd
             },
-            body: JSON.stringify({
-              userId: user._id,
-              offer: {
-                id: offer?.id,
-                name: offer?.title,
-                source: offer?.provider,
-                payout: offer?.reward_usd
-              },
-              metadata: {
-                timestamp: new Date().toISOString(),
-                deviceType: deviceType,
-              }
-            })
-          });
-          console.log('Offer start tracked successfully');
-        } catch (trackingError) {
-          console.error('Failed to track offer start:', trackingError);
-        }
+            metadata: {
+              timestamp: new Date().toISOString(),
+              deviceType: deviceType,
+              isSurvey: false
+            }
+          })
+        });
+        console.log('Offer start tracked successfully');
+      } catch (trackingError) {
+        console.error('Failed to track offer start:', trackingError);
       }
-
-      // Call onStart callback
-      onStart(offer);
-      
-      // Open the offer in a new tab
-      window.open(offer?.click_url, '_blank');
-      
-      // Close modal
-      onClose();
-    } catch (error) {
-      console.error('Failed to start offer:', error);
-    } finally {
-      setIsStarting(false);
+    } else if (isSurvey) {
+      console.log('Survey started - skipping tracking');
     }
-  };
+
+    // Call onStart callback
+    onStart(offer);
+    
+    // Open the offer in a new tab
+    window.open(offer?.click_url, '_blank');
+    
+    // Close modal
+    onClose();
+  } catch (error) {
+    console.error('Failed to start offer:', error);
+  } finally {
+    setIsStarting(false);
+  }
+};
 
   const handleRemoveOffer = async () => {
     if (!checkAuth() || !user?._id || !offer?.id) return;

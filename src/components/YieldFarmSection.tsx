@@ -1,4 +1,4 @@
-// frontend/src/components/YieldFarmSection.tsx
+// components/YieldFarmSection.tsx
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Sprout, Info, X, CheckCircle, AlertCircle, ChevronDown, Wallet, ArrowDownCircle, Calendar, TrendingUp, Clock } from 'lucide-react';
@@ -17,7 +17,7 @@ interface YieldFarmSectionProps {
     tierId: string;
   }) => void;
   onDeposit?: () => void;
-  onHarvest?: (farmId: string) => Promise<void>;
+  onHarvest: (farmId: string) => Promise<void>;
 }
 
 // Yield tiers data
@@ -318,8 +318,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
   };
 
   const handleHarvestClick = async (farmId: string) => {
-    if (!onHarvest) return;
-    
+
     setHarvestingFarmId(farmId);
     try {
       await onHarvest(farmId);
@@ -490,10 +489,10 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
               const tier = YIELD_TIERS.find(t => t.id === farm.tierId);
               const isLockPeriodOver = isFarmLockPeriodOver(farm);
               const daysRemaining = getDaysRemaining(farm);
-              const isHarvesting = harvestingFarmId === String(farm.id);
+              const isHarvesting = harvestingFarmId === String(farm._id);
 
               return (
-                <div key={farm.id} className="p-4 rounded-xl glass border border-white/5 hover:border-bull-orange/20 transition-all">
+                <div key={farm._id} className="p-4 rounded-xl glass border border-white/5 hover:border-bull-orange/20 transition-all">
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <img 
@@ -548,7 +547,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
 
                     {isLockPeriodOver && (
                       <button
-                        onClick={() => handleHarvestClick(farm.id.toString())}
+                        onClick={() => handleHarvestClick(farm._id)}
                         disabled={isHarvesting}
                         className={`px-6 py-3 rounded-xl font-bold transition-all ${
                           isHarvesting
@@ -609,7 +608,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
               const totalEarnedUsd = totalEarned * (prices.BULLFI || 0.01);
 
               return (
-                <div key={farm.id} className="p-3 rounded-xl glass border border-white/5 opacity-75">
+                <div key={farm._id} className="p-3 rounded-xl glass border border-white/5 opacity-75">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <img 

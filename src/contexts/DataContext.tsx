@@ -1,3 +1,4 @@
+// contexts/DataContext.tsx
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import API_BASE_URL from '../config';
 import { useCpxSurveys } from '../components/useCpxSurveys';
@@ -204,7 +205,7 @@ interface DataContextType {
   // Farms
   setFarms: React.Dispatch<React.SetStateAction<YieldFarm[]>>;
   fetchActiveFarms: () => Promise<void>;
-  handleHarvest: (farmId: number) => Promise<void>;
+  handleHarvest: (farmId: string) => Promise<void>;
   
   // Referrals
   referralLink: string;
@@ -1320,7 +1321,7 @@ const handleAdComplete = (adId: string, reward: number) => {  // Changed from nu
       };
     });
     
-    setAlert({ message: `Offer Started: ${offer.title}. Rewards will be credited upon completion verification.`, type: 'success'});
+    setAlert({ message: `Offer Started: ${offer.title}. Rewards will be credited upon completion.`, type: 'success'});
   };
 
   const handleBitcoTaskComplete = useCallback((taskId: string, reward: number) => {
@@ -1434,7 +1435,7 @@ const handleLock = async (data: any) => {
 
 // Add new farm to local state with all the new fields
 const newFarm: YieldFarm = {
-  id: responseData.farmId || Date.now(),
+  _id: responseData.farmId || Date.now(),
   user_id: parseInt(user.id),
   token,
   amount,
@@ -1558,7 +1559,7 @@ const newFarm: YieldFarm = {
   }, [user?.referrals, fetchReferralDetails, referralUsers?.length]);
 
   // Handle harvest
-  const handleHarvest = async (farmId: number) => {
+  const handleHarvest = async (farmId: string) => {
     try {
       const headers = getAuthHeaders();
       const response = await fetch(`https://payment.bullfaucet.com/api/yield-farm/harvest`, {
@@ -1580,7 +1581,7 @@ const newFarm: YieldFarm = {
         });
 
         // Remove harvested farm
-        setFarms(prev => prev.filter(farm => farm.id !== farmId));
+        setFarms(prev => prev.filter(farm => farm._id !== farmId));
         
         setAlert({ 
           message: `Successfully harvested ${data.yieldAmount} BULLFI!`, 
