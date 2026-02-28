@@ -251,6 +251,7 @@ const Navbar: React.FC<NavbarProps> = ({
               </span>
             )}
           </button>
+          
           {/* Profile */}
             <button
               onClick={handleProfileClick}
