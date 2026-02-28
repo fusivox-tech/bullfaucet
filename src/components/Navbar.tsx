@@ -42,7 +42,7 @@ const Navbar: React.FC<NavbarProps> = ({
   const [isAdvertiseDropdownOpen, setIsAdvertiseDropdownOpen] = useState(false);
   const earnDropdownRef = useRef<HTMLDivElement>(null);
   const advertiseDropdownRef = useRef<HTMLDivElement>(null);
-  const { unreadCount } = useData();
+  const { unreadCount, user } = useData();
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -108,7 +108,7 @@ const Navbar: React.FC<NavbarProps> = ({
   return (
     <>
       <nav className={`fixed top-0 left-0 right-0 h-16 z-50 flex items-center justify-between px-7 md:px-10 ${isScrolled ? 'glass py-6' : 'py-12'}`} style={{transition: 'padding 0.3s ease-in-out'}}>
-        <div className="flex items-center gap-6">
+        <div className="flex w-full items-center justify-between gap-0">
           <div className="flex items-center gap-2">
             <img 
               onClick={handleLogoClick}
@@ -222,21 +222,8 @@ const Navbar: React.FC<NavbarProps> = ({
               Daily Contest
             </button>
 
-            {/* Profile */}
-            <button
-              onClick={handleProfileClick}
-              className={`flex items-center gap-2 px-3 py-1.5 transition-all duration-200 font-bold md:text-[12px] ${
-                activeTab === 'profile' 
-                  ? 'text-bull-orange' 
-                  : 'text-zinc-400 hover:bg-white/5 hover:text-white'
-              }`}
-            >
-              Profile
-            </button>
           </div>
-        </div>
-        
-        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
           <div className="hidden md:flex items-center gap-4 md:gap-2">
             <button 
               onClick={onDeposit}
@@ -255,7 +242,7 @@ const Navbar: React.FC<NavbarProps> = ({
           </div>
           <button
             onClick={() => setIsNoteOpen(true)}
-            className="relative p-2 hover:bg-white/5 rounded-xl transition-colors"
+            className="relative p-2 hover:bg-white/5 rounded-xl transition-colors md:pr-0 md:mr-0"
           >
             <Bell className="w-5 h-5" />
             {unreadCount > 0 && (
@@ -264,12 +251,33 @@ const Navbar: React.FC<NavbarProps> = ({
               </span>
             )}
           </button>
+          {/* Profile */}
+            <button
+              onClick={handleProfileClick}
+              className={`flex items-center gap-2 px-0 transition-all duration-200 font-bold md:text-[12px] ${
+                activeTab === 'profile' 
+                  ? 'text-bull-orange' 
+                  : 'text-zinc-400 hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              <div className="w-8 h-8 rounded-full bg-bull-orange/20 overflow-hidden border-1 border-zinc-600">
+            <img 
+              src={user?.profileImage || "/avatar/other/other1.jpg"} 
+              alt="Profile" 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "/avatar/other/other1.jpg";
+              }}
+            />
+          </div>
+            </button>
           <button 
             onClick={onMenuOpen}
             className="p-2 hover:bg-white/5 rounded-lg transition-colors md:hidden"
           >
             <Menu className="w-6 h-6" />
           </button>
+        </div>
         </div>
       </nav>
     </>
