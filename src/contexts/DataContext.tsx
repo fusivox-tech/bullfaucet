@@ -1584,7 +1584,7 @@ const newFarm: YieldFarm = {
         setFarms(prev => prev.filter(farm => farm._id !== farmId));
         
         setAlert({ 
-          message: `Successfully harvested ${data.yieldAmount} BULLFI!`, 
+          message: `Farm successfully harvested!`, 
           type: 'success' 
         });
       } else {

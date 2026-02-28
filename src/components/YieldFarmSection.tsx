@@ -629,7 +629,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
                         ${totalEarnedUsd.toFixed(2)}
                       </p>
                       <p className="text-[10px] text-zinc-500">
-                        {totalEarned.toFixed(4)} BULLFI earned
+                        {(Math.round(totalEarned)).toLocaleString()} BULLFI earned
                       </p>
                     </div>
                   </div>
