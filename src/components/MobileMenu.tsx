@@ -38,10 +38,9 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
     { id: 'offerwalls', label: 'Offerwalls', icon: Gift },
     { id: 'farm', label: 'Yield Farm', icon: Sprout },
     { id: 'referrals', label: 'Referrals', icon: Users },
-    { id: 'contest', label: 'Daily Contest', icon: Gift },
     { id: 'create-ad', label: 'Create Ad', icon: PlusSquare },
     { id: 'my-ads', label: 'My Ads', icon: Megaphone },
-    { id: 'profile', label: 'Profile', icon: UserIcon },
+    { id: 'contest', label: 'Daily Contest', icon: Gift },
   ];
 
   const handleItemClick = (id: string) => {
