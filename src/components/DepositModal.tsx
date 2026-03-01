@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { X, ChevronDown, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { X, ChevronDown, AlertCircle, CheckCircle2, Info } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import WalletDisplay from './WalletDisplay';
 
@@ -139,6 +139,16 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
 
+          {/* ===== MINIMUM DEPOSIT NOTE - SHOWN FOR ALL METHODS EXCEPT FAUCETPAY ===== */}
+          {selectedMethod?.type !== 'faucetpay' && (
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+              <p className="text-xs text-zinc-300 flex items-center gap-2">
+                <Info size={14} className="text-amber-400 flex-shrink-0"/>
+                <span className="font-bold text-amber-400">Minimum deposit is $1.00 USD</span>
+              </p>
+            </div>
+          )}
+
           {/* FaucetPay Deposit */}
           {selectedMethod?.type === 'faucetpay' && (
             <form onSubmit={handleFaucetPaySubmit} className="space-y-4">
@@ -189,51 +199,64 @@ const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose }) => {
           )}
           
           {/* BULLFI Deposit Body */}
-        {selectedMethod?.name === 'BullFaucet Coin' && (
-            <WalletDisplay 
-              tokenName="BULLFI" 
-              user={user} 
-              onGenerate={handleGenerateWallet}
-              onReactivate={handleReactivateWallet}
-            />
-        )}
+          {selectedMethod?.name === 'BullFaucet Coin' && (
+            <>
+              <WalletDisplay 
+                tokenName="BULLFI" 
+                user={user} 
+                onGenerate={handleGenerateWallet}
+                onReactivate={handleReactivateWallet}
+              />
+            </>
+          )}
 
-        {/* SOL Deposit Body */}
-        {selectedMethod?.name === 'Solana' && (
-            <WalletDisplay 
-              tokenName="Solana" 
-              user={user} 
-              onGenerate={handleGenerateWallet}
-              onReactivate={handleReactivateWallet}
-            />
-        )}
-        
-        {selectedMethod?.name === 'Bitcoin' && (
-            <WalletDisplay 
-              tokenName="Bitcoin" 
-              user={user} 
-              onGenerate={handleGenerateWallet}
-              onReactivate={handleReactivateWallet}
-            />
-        )}
-        
-        {selectedMethod?.name === 'Binance Coin' && (
-            <WalletDisplay 
-              tokenName="Binance Coin" 
-              user={user} 
-              onGenerate={handleGenerateWallet}
-              onReactivate={handleReactivateWallet}
-            />
-        )}
-        
-        {selectedMethod?.name === 'Ripple' && (
-            <WalletDisplay 
-              tokenName="Ripple" 
-              user={user} 
-              onGenerate={handleGenerateWallet}
-              onReactivate={handleReactivateWallet}
-            />
-        )}
+          {/* SOL Deposit Body */}
+          {selectedMethod?.name === 'Solana' && (
+            <>
+              <WalletDisplay 
+                tokenName="Solana" 
+                user={user} 
+                onGenerate={handleGenerateWallet}
+                onReactivate={handleReactivateWallet}
+              />
+            </>
+          )}
+          
+          {/* Bitcoin Deposit Body */}
+          {selectedMethod?.name === 'Bitcoin' && (
+            <>
+              <WalletDisplay 
+                tokenName="Bitcoin" 
+                user={user} 
+                onGenerate={handleGenerateWallet}
+                onReactivate={handleReactivateWallet}
+              />
+            </>
+          )}
+          
+          {/* Binance Coin Deposit Body */}
+          {selectedMethod?.name === 'Binance Coin' && (
+            <>
+              <WalletDisplay 
+                tokenName="Binance Coin" 
+                user={user} 
+                onGenerate={handleGenerateWallet}
+                onReactivate={handleReactivateWallet}
+              />
+            </>
+          )}
+          
+          {/* Ripple Deposit Body */}
+          {selectedMethod?.name === 'Ripple' && (
+            <>
+              <WalletDisplay 
+                tokenName="Ripple" 
+                user={user} 
+                onGenerate={handleGenerateWallet}
+                onReactivate={handleReactivateWallet}
+              />
+            </>
+          )}
         </div>
       </motion.div>
     </div>
