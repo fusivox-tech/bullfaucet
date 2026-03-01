@@ -227,19 +227,34 @@ const History: React.FC<HistoryProps> = ({ isOpen, onClose }) => {
   const startIndex = currentPage * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentTransactions = filteredTransactions.slice(startIndex, endIndex);
+  
 
   const formatAmount = (transaction: any) => {
-    const amount = transaction.amountUsd || 
-                   transaction.amountInUsd || 
-                   transaction.amount * tokenPrice || 
-                   transaction.finalReward * tokenPrice || 
-                   0;
+    const amount = transaction.amountUsd || transaction.amountInUsd || transaction.amount * tokenPrice || transaction.finalReward * tokenPrice || 0;
     
     if (transaction.type?.toLowerCase().includes('withdraw')) {
-      return `-$${amount.toFixed(2)}`;
+      return `-$${amount.toLocaleString()}`;
     }
     
-    return `+$${amount.toFixed(2)}`;
+    if (transaction.type?.toLowerCase().includes('upgrade')) {
+      return `$${amount.toLocaleString()}`;
+    }
+    
+    if (transaction.type?.toLowerCase().includes('task created')) {
+      return `$${amount.toLocaleString()}`;
+    }
+    
+    if (transaction.type?.toLowerCase().includes('purchased')) {
+      return `$${amount.toLocaleString()}`;
+    }
+    
+    if (transaction.type?.toLowerCase().includes('task created') || 
+        transaction.type?.toLowerCase().includes('ad created') ||
+        transaction.type?.toLowerCase().includes('ad spend')) {
+      return `$${amount.toLocaleString()}`;
+    }
+    
+    return `+$${amount.toLocaleString()}`;
   };
 
   const getAmountColor = (transaction: any) => {
