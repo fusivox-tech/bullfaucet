@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { X, AlertCircle, CheckCircle2, ChevronDown } from 'lucide-react';
 import { User } from '../types';
+import { useData } from '../contexts/DataContext';
 
 interface WithdrawModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface WithdrawModalProps {
 }
 
 const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose, user, onWithdraw }) => {
+  const { tokenPrice, bitcoinPrice, solanaPrice, binancePrice, ripplePrice } = useData();
   const [selectedCoin, setSelectedCoin] = useState('BULLFI');
   const [amount, setAmount] = useState('');
   const [address, setAddress] = useState('');
@@ -72,11 +74,11 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose, user, on
     };
     
     const priceMap: Record<string, number> = {
-      BULLFI: user ? 0.01 : 0, // You'll need to get actual prices
-      SOL: 100,
-      BTC: 50000,
-      BNB: 300,
-      XRP: 0.5
+      BULLFI: tokenPrice,
+      SOL: solanaPrice,
+      BTC: bitcoinPrice,
+      BNB: binancePrice,
+      XRP: ripplePrice
     };
     
     const baseFeeUsd = networkFeesUsd[selectedCoin] || 1.00;
