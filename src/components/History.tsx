@@ -249,9 +249,26 @@ const History: React.FC<HistoryProps> = ({ isOpen, onClose }) => {
     return 'text-emerald-400';
   };
   
-const formatTransactionType = (type: string): string => {
+const formatTransactionType = (type: string | undefined): string => {
   if (!type) return "";
   
+  // Handle swap transactions (e.g., "Swap_xrp_to_bullfi")
+  if (type.toLowerCase().startsWith('swap_')) {
+    // Split by underscore
+    const parts = type.split('_');
+    
+    if (parts.length >= 4) {
+      // Format: Swap XRP to BULLFI
+      const fromAsset = parts[1].toUpperCase();
+      const toAsset = parts[3].toUpperCase();
+      return `Swap ${fromAsset} to ${toAsset}`;
+    }
+    
+    // Fallback for malformed swap strings
+    return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  }
+  
+  // Handle other transaction types
   const words = type.split(/\s+/).slice(0, 2);
   return words.map((word: string) => 
     word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
