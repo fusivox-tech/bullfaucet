@@ -624,8 +624,8 @@ const MyAds: React.FC<MyAdsProps> = ({ onCreateAd }) => {
                         Edit
                       </button>
                     )}
-                    
-                    {(task.status !== 'Rejected' || task.status !== 'Pending') && clicksRemaining > 0 && (
+                     
+                    {task.status !== 'Rejected' && task.status !== 'Pending' && clicksRemaining > 0 && (
                       <button
                         onClick={() => handleTaskStatusToggle(task._id, task.status)}
                         disabled={loadingTaskId === task._id}
