@@ -737,8 +737,8 @@ const MyAds: React.FC<MyAdsProps> = ({ onCreateAd }) => {
                 </div>
 
                 {/* Action Buttons */}
-                {!(selectedTask.status === 'Pending' || selectedTask.status === 'Rejected' || selectedTask.clicks === 0) && (
                   <div className="flex gap-3 mb-6">
+                    {!(selectedTask.status === 'Pending' || selectedTask.status === 'Rejected' || selectedTask.clicks === 0) && (
                     <button
                       onClick={() => handleTaskStatusToggle(selectedTask._id, selectedTask.status)}
                       disabled={loadingTaskId === selectedTask._id}
@@ -752,6 +752,7 @@ const MyAds: React.FC<MyAdsProps> = ({ onCreateAd }) => {
                         'Pause Task'
                       )}
                     </button>
+                    )}
                     <button
                       onClick={() => setOpenBuyBox(!openBuyBox)}
                       className="flex-1 py-3 rounded-xl bg-bull-orange font-bold hover:bg-orange-600 transition-all"
@@ -759,7 +760,6 @@ const MyAds: React.FC<MyAdsProps> = ({ onCreateAd }) => {
                       Add Clicks
                     </button>
                   </div>
-                )}
 
                 {/* Buy Clicks Section */}
                 {openBuyBox && (
