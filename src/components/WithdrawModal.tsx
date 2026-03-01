@@ -102,11 +102,11 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose, user, on
     
     // Check minimum USD value
     const priceMap: Record<string, number> = {
-      BULLFI: 0.01,
-      SOL: 100,
-      BTC: 50000,
-      BNB: 300,
-      XRP: 0.5
+      BULLFI: tokenPrice,
+      SOL: solanaPrice,
+      BTC: bitcoinPrice,
+      BNB: binancePrice,
+      XRP: ripplePrice
     };
     const usdValue = numAmount * (priceMap[selectedCoin] || 0);
     if (usdValue < selectedToken.minUsd) return false;
@@ -120,11 +120,11 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose, user, on
     if (numAmount > balance) return "Insufficient balance";
     
     const priceMap: Record<string, number> = {
-      BULLFI: 0.01,
-      SOL: 100,
-      BTC: 50000,
-      BNB: 300,
-      XRP: 0.5
+      BULLFI: tokenPrice,
+      SOL: solanaPrice,
+      BTC: bitcoinPrice,
+      BNB: binancePrice,
+      XRP: ripplePrice
     };
     const usdValue = numAmount * (priceMap[selectedCoin] || 0);
     if (usdValue < selectedToken.minUsd) {
