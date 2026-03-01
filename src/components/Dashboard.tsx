@@ -11,6 +11,7 @@ import {
   Award,
   CheckCircle2,
   Info,
+  CalendarClock
 } from 'lucide-react';
 import { User, COINS } from '../types';
 import { useData } from '../contexts/DataContext';
@@ -268,8 +269,8 @@ const handleCoinClick = (coin: typeof COINS[0]) => {
           <div className="absolute top-[50%] right-0 p-4 opacity-2 transition-opacity" style={{transform: 'translateY(-50%)'}}>
             <BadgeDollarSign className="w-24 h-24 text-white" />
           </div>
-          <p className="text-zinc-400 text-sm font-medium mb-1 ">Portfolio USD Value</p>
-          <h3 onClick={() => setIsHistoryOpen(true)} className="text-4xl font-display font-bold md:text-5xl">${balance}</h3>
+          <p className="text-zinc-400 text-sm font-medium mb-1 ">Portfolio Value</p>
+          <h3 className="text-4xl font-display font-bold md:text-5xl">${balance}</h3>
           {(user?.pendingBalance || 0) > 0 && (
             <button 
               onClick={() => setIsPendingModalOpen(true)}
@@ -300,6 +301,9 @@ const handleCoinClick = (coin: typeof COINS[0]) => {
           >
             <ArrowUpCircle className="w-4 h-4" />
             Withdraw
+          </button>
+          <button onClick={() => setIsHistoryOpen(true)} className="flex items-center gap-2 px-2 py-2 rounded-[20px] text-zinc glass font-bold text-sm flex-1 justify-center">
+            <CalendarClock className="w-5 h-5"/>
           </button>
         </motion.div>
 
