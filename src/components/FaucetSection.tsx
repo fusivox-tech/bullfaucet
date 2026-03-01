@@ -573,7 +573,7 @@ const FaucetSection: React.FC<FaucetSectionProps> = ({
                   <span className={`font-mono font-bold ${index === 5 ? 'text-bull-orange' : ''}`}>
                     {selectedToken.ticker === 'BULLFI' 
                       ? Math.round(tokenAmount).toLocaleString() 
-                      : tokenAmount.toFixed(selectedToken.ticker === 'BTC' ? 8 : 4)} {selectedToken.ticker}
+                      : tokenAmount.toFixed(selectedToken.ticker === 'BTC' ? 10 : selectedToken.ticker === "BULLFI" ? 0 : 8)} {selectedToken.ticker}
                   </span>
                 </div>
               );
