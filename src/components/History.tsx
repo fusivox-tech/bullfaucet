@@ -248,6 +248,15 @@ const History: React.FC<HistoryProps> = ({ isOpen, onClose }) => {
     if (type.includes('upgrade') || type.includes('purchase')) return 'text-red-400';
     return 'text-emerald-400';
   };
+  
+const formatTransactionType = (type: string): string => {
+  if (!type) return "";
+  
+  const words = type.split(/\s+/).slice(0, 2);
+  return words.map((word: string) => 
+    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+  ).join(" ");
+};
 
   if (!isOpen) return null;
 
@@ -294,7 +303,7 @@ const History: React.FC<HistoryProps> = ({ isOpen, onClose }) => {
                 
                 return (
                   <div key={index} className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all">
-                      <p className="font-bold flex justify-between gap-4 text-sm" style={{width: '100%'}}>{transaction.description || transaction.type} <span className={`font-mono font-bold ${getAmountColor(transaction)}`}>
+                      <p className="font-bold flex justify-between gap-4 text-sm" style={{width: '100%'}}>{transaction.description || formatTransactionType(transaction.type)} <span className={`font-mono font-bold ${getAmountColor(transaction)}`}>
                         {formatAmount(transaction)}
                       </span></p>
                       <p className="text-xs text-zinc-500 flex items-center gap-1">
