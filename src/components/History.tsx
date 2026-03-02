@@ -246,7 +246,8 @@ const History: React.FC<HistoryProps> = ({ isOpen, onClose }) => {
     }
     
     if (transaction.type?.toLowerCase().includes('purchased')) {
-      return `$${amount.toLocaleString()}`;
+      const absoluteAmount = Math.abs(amount);
+      return `-$${absoluteAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
     
     if (transaction.type?.toLowerCase().includes('task created') || 

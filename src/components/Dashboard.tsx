@@ -286,7 +286,7 @@ const handleCoinClick = (coin: typeof COINS[0]) => {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex md:hidden gap-2 px-2"
+          className="flex md:hidden gap-2 px-2 items-center"
         >
           <button 
             onClick={onDeposit}
@@ -302,9 +302,7 @@ const handleCoinClick = (coin: typeof COINS[0]) => {
             <ArrowUpCircle className="w-4 h-4" />
             Withdraw
           </button>
-          <button onClick={() => setIsHistoryOpen(true)} className="flex items-center gap-2 px-2 py-2 rounded-[20px] text-zinc glass font-bold text-sm flex-1 justify-center">
-            <CalendarClock className="w-5 h-5"/>
-          </button>
+          <CalendarClock onClick={() => setIsHistoryOpen(true)} className="w-9 h-9 text-zinc-400 mr-1"/>
         </motion.div>
 
         {/* Today's Earnings Card */}
