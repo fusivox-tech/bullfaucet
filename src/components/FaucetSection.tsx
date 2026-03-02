@@ -560,7 +560,7 @@ const FaucetSection: React.FC<FaucetSectionProps> = ({
           <h4 className="font-display font-bold text-lg">Reward Tiers</h4>
           <div className="space-y-3">
             {rewardTiers.map((tier, index) => {
-              const tokenAmount = calculateTokenReward(tier.reward);
+              const tokenAmount = tier.reward / selectedToken.price;
               return (
                 <div 
                   key={tier.range} 
