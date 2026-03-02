@@ -241,7 +241,8 @@ const History: React.FC<HistoryProps> = ({ isOpen, onClose }) => {
     }
     
     if (transaction.type?.toLowerCase().includes('task created')) {
-      return `$${amount.toLocaleString()}`;
+      const absoluteAmount = Math.abs(amount);
+      return `-$${absoluteAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
     
     if (transaction.type?.toLowerCase().includes('purchased')) {
@@ -260,6 +261,7 @@ const History: React.FC<HistoryProps> = ({ isOpen, onClose }) => {
   const getAmountColor = (transaction: any) => {
     const type = transaction.type?.toLowerCase() || '';
     if (type.includes('withdraw')) return 'text-red-400';
+    if (type.includes('created')) return 'text-red-400';
     if (type.includes('upgrade') || type.includes('purchase')) return 'text-red-400';
     return 'text-emerald-400';
   };
