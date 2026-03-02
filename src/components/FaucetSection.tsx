@@ -341,10 +341,6 @@ const FaucetSection: React.FC<FaucetSectionProps> = ({
     };
   };
 
-  const calculateTokenReward = (usdAmount: number) => {
-    return usdAmount / selectedToken.price;
-  };
-
   const rollDice = async () => {
     if (!checkAuth()) return;
     
