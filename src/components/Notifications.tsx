@@ -6,12 +6,9 @@ import {
   X, 
   CheckCheck, 
   Clock, 
-  Award, 
-  DollarSign, 
-  Users, 
-  Trophy,
-  AlertCircle,
-  Loader2
+  Loader2,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import API_BASE_URL from '../config';
@@ -31,6 +28,7 @@ const Notifications: React.FC<NotificationsProps> = ({ isOpen, onClose }) => {
   } = useData();
   
   const [isMarkingRead, setIsMarkingRead] = useState(false);
+  const [expandedNotificationId, setExpandedNotificationId] = useState<string | null>(null);
 
   // Helper function to get auth headers
   const getAuthHeaders = () => {
@@ -135,23 +133,6 @@ const Notifications: React.FC<NotificationsProps> = ({ isOpen, onClose }) => {
     }
   };
 
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'reward':
-        return <Award className="w-5 h-5 text-bull-orange" />;
-      case 'payment':
-        return <DollarSign className="w-5 h-5 text-emerald-400" />;
-      case 'referral':
-        return <Users className="w-5 h-5 text-blue-400" />;
-      case 'contest':
-        return <Trophy className="w-5 h-5 text-yellow-400" />;
-      case 'alert':
-        return <AlertCircle className="w-5 h-5 text-red-400" />;
-      default:
-        return <Bell className="w-5 h-5 text-zinc-400" />;
-    }
-  };
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -165,6 +146,16 @@ const Notifications: React.FC<NotificationsProps> = ({ isOpen, onClose }) => {
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
     return date.toLocaleDateString();
+  };
+
+  const handleNotificationClick = (notificationId: string, isRead: boolean) => {
+    // Toggle expansion
+    setExpandedNotificationId(prev => prev === notificationId ? null : notificationId);
+    
+    // Mark as read if it's unread
+    if (!isRead) {
+      markAsRead(notificationId);
+    }
   };
 
   return (
@@ -189,9 +180,6 @@ const Notifications: React.FC<NotificationsProps> = ({ isOpen, onClose }) => {
             {/* Header */}
             <div className="p-6 border-b border-white/10 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-bull-orange/20 flex items-center justify-center">
-                  <Bell className="w-5 h-5 text-bull-orange" />
-                </div>
                 <div>
                   <h2 className="text-xl font-display font-bold">Notifications</h2>
                   {unreadCount > 0 && (
@@ -238,50 +226,75 @@ const Notifications: React.FC<NotificationsProps> = ({ isOpen, onClose }) => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {notifications.map((notification: any) => (
-                    <motion.div
-                      key={notification._id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`p-4 rounded-xl border transition-all cursor-pointer ${
-                        notification.read 
-                          ? 'bg-white/5 border-white/5 hover:border-white/10' 
-                          : 'bg-bull-orange/10 border-bull-orange/20 hover:border-bull-orange/30'
-                      }`}
-                      onClick={() => {
-                        if (!notification.read) {
-                          markAsRead(notification._id);
-                        }
-                      }}
-                    >
-                      <div className="flex gap-3">
-                        <div className={`flex-shrink-0 w-8 h-8 rounded-full ${
-                          notification.read ? 'bg-white/5' : 'bg-bull-orange/20'
-                        } flex items-center justify-center`}>
-                          {getNotificationIcon(notification.type)}
-                        </div>
-                        
-                        <div className="flex-1">
-                          <h4 className={`font-bold text-sm mb-1 ${
-                            notification.read ? 'text-zinc-300' : 'text-white'
-                          }`}>
-                            {notification.title || 'System Alert'}
-                          </h4>
-                          <p className="text-xs text-zinc-400 mb-2">
-                            {notification.message}
-                          </p>
-                          <div className="flex items-center gap-1 text-[10px] text-zinc-500">
-                            <Clock className="w-3 h-3" />
-                            {formatDate(notification.createdAt)}
+                  {notifications.map((notification: any) => {
+                    const isExpanded = expandedNotificationId === notification._id;
+                    
+                    return (
+                      <motion.div
+                        key={notification._id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                          notification.read 
+                            ? 'bg-white/5 border-white/5 hover:border-white/10' 
+                            : 'bg-bull-orange/10 border-bull-orange/20 hover:border-bull-orange/30'
+                        }`}
+                        onClick={() => handleNotificationClick(notification._id, notification.read)}
+                      >
+                        {/* Header section - always visible */}
+                        <div className="flex gap-3">
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <h4 className={`font-bold text-sm ${
+                                notification.read ? 'text-zinc-300' : 'text-white'
+                              }`}>
+                                {notification.title || 'System Alert'}
+                              </h4>
+                              
+                              {/* Expand/Collapse Indicator */}
+                              <div className="text-zinc-400">
+                                {isExpanded ? (
+                                  <ChevronUp className="w-4 h-4" />
+                                ) : (
+                                  <ChevronDown className="w-4 h-4" />
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Time - always visible */}
+                            <div className="flex items-center gap-1 text-[10px] text-zinc-500 mt-1">
+                              <Clock className="w-3 h-3" />
+                              {formatDate(notification.createdAt)}
+                            </div>
+                            
+                            {/* Expanded Content - shows when clicked */}
+                            <AnimatePresence>
+                              {isExpanded && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  transition={{ duration: 0.2 }}
+                                  className="overflow-hidden"
+                                >
+                                  <div className="pt-3 mt-2 border-t border-white/10">
+                                    <p className="text-xs text-zinc-400">
+                                      {notification.message}
+                                    </p>
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </div>
+                          
+                          {/* Unread indicator */}
+                          {!notification.read && (
+                            <div className="w-2 h-2 rounded-full bg-bull-orange flex-shrink-0 mt-1" />
+                          )}
                         </div>
-                        
-                        {!notification.read && (
-                          <div className="w-2 h-2 rounded-full bg-bull-orange" />
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
+                      </motion.div>
+                    );
+                  })}
                 </div>
               )}
             </div>

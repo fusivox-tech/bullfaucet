@@ -78,15 +78,16 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-bull-dark z-50 flex flex-col items-center justify-center">
+    <div className="fixed inset-0 bg-bull-dark z-50 flex flex-col items-center justify-center p-6">
       {/* Background decorative elements */}
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden p-6">
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-bull-orange/5 blur-[120px] rounded-full animate-pulse" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-600/5 blur-[100px] rounded-full animate-pulse delay-1000" />
       </div>
 
       {/* Logo and loading indicator */}
       <div className="relative z-10 flex flex-col items-center">
+        <div className="glass w-full flex flex-col items-center p-6 rounded-xl m-6">
         <motion.img
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -139,6 +140,8 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
         >
           {message}
         </motion.p>
+        
+       </div>
 
         {/* Loading tips */}
         {showMessage && (
@@ -148,12 +151,12 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.5 }}
-            className="mt-6 text-center max-w-sm px-6"
+            className="text-center w-full p-6 glass w-full flex flex-col items-center rounded-xl m-6 mt-2"
           >
             <div className="flex items-start gap-3">
               <div className="flex-1 text-center">
                 <p className="text-xs text-zinc-500 leading-relaxed">
-                  <span className="text-bull-orange font-bold">💡 Pro Tip:</span> {currentTip.text}
+                  <span className="text-bull-orange font-bold">Pro Tip:</span> {currentTip.text}
                 </p>
                 {/* Tip counter dots */}
                 <div className="flex justify-center gap-1.5 mt-3">
