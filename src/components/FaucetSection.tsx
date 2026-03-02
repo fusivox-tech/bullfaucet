@@ -138,7 +138,7 @@ const FaucetSection: React.FC<FaucetSectionProps> = ({
   const confettiSoundRef = useRef<HTMLAudioElement | null>(null);
 
   // Lifetime offer earnings in USD
-  const lifetimeOfferEarningUsd = (user?.lifetimeOfferEarning || 0) * tokenPrice;
+  const lifetimeOfferEarningUsd = user?.lifetimeOfferEarningUsd || 0;
   
   const todayEarnings = useMemo(() => {
   const ptcUsd = (dailyActivity?.ptcEarningsToday || 0) * tokenPrice;
@@ -327,8 +327,7 @@ const FaucetSection: React.FC<FaucetSectionProps> = ({
 
   // Get unlock progress using dailyActivity
   const getUnlockProgress = (token: FaucetToken) => {
-    const lifetimeOfferEarning = user?.lifetimeOfferEarning || 0;
-    const lifetimeOfferEarningUsd = lifetimeOfferEarning * tokenPrice;
+    const lifetimeOfferEarningUsd = user?.lifetimeOfferEarningUsd || 0;
     
     const dailyProgress = Math.min(ptcToday / token.dailyPtcRequirement, 1);
     const permanentProgress = Math.min(lifetimeOfferEarningUsd / token.permanentUnlockRequirement, 1);

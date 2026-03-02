@@ -82,8 +82,8 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // Lifetime offer earnings in USD
   const lifetimeOfferEarningUsd = useMemo(() => {
-    return (user?.lifetimeOfferEarning || 0) * tokenPrice;
-  }, [user?.lifetimeOfferEarning, tokenPrice]);
+    return user?.lifetimeOfferEarningUsd || 0;
+  }, [user?.lifetimeOfferEarningUsd]);
   
   const pendingUsd = (user?.pendingBalance || 0) * tokenPrice;
   

@@ -18,7 +18,8 @@ export interface User {
   ads_completed_today: number;
   last_ad_reset: string;
   created_at: string;
-  totalReferralEarningUsd: number; // Keep this one as required
+  totalReferralEarningUsd: number;
+  lifetimeOfferEarningUsd: number;
   
   // Profile fields
   bio?: string;
