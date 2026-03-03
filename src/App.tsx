@@ -166,7 +166,7 @@ function AppContent() {
   if (isCheckingAuth) {
     return (
       <LoadingScreen 
-        message="Verifying your credentials..."
+        message=""
       />
     );
   }
@@ -199,7 +199,7 @@ function AppContent() {
   if (isDataLoading) {
     return (
       <LoadingScreen 
-        message={`Loading your dashboard... ${Math.round(loadingProgress)}%`}
+        message={`${Math.round(loadingProgress)}%`}
       />
     );
   }
