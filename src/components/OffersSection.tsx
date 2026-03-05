@@ -429,7 +429,7 @@ const filteredItems = useMemo(() => {
         setWannadsLoading(false);
         setAdscendLoading(false);
         setNotikLoading(false);
-      }, 10000);
+      }, 3000);
 
       return () => clearTimeout(timeoutId);
     } else {

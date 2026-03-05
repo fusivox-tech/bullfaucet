@@ -1081,7 +1081,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
                   <div>
                     <p className="text-sm font-bold text-orange-400">Daily Yields Will Stop</p>
                     <p className="text-xs text-zinc-400">
-                      After harvesting, this farm will no longer earn daily yields. Make sure you've collected all desired yield payments.
+                      After harvesting, this farm will no longer earn daily yields.
                     </p>
                   </div>
                 </div>
