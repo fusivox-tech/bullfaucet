@@ -1090,12 +1090,9 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
               {/* Yield Summary */}
               {selectedFarmForHarvest.totalYieldReceived && selectedFarmForHarvest.totalYieldReceived > 0 && (
                 <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                  <p className="text-xs text-zinc-400 mb-1">Total Yield Earned from this Farm</p>
+                  <p className="text-xs text-zinc-400 mb-1">Total Yield Earned</p>
                   <p className="text-2xl font-display font-bold text-emerald-400">
                     ${((selectedFarmForHarvest.totalYieldReceived || 0) * (prices.BULLFI || 0.01)).toFixed(2)}
-                  </p>
-                  <p className="text-xs text-zinc-500">
-                    {(Math.round(selectedFarmForHarvest.totalYieldReceived || 0)).toLocaleString()} BULLFI
                   </p>
                 </div>
               )}
@@ -1115,7 +1112,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
                   onClick={handleConfirmHarvest}
                   className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-emerald-500/20"
                 >
-                  Confirm Harvest
+                  Confirm
                 </button>
               </div>
 
