@@ -1,4 +1,3 @@
-// components/Dashboard.tsx
 import React, { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { 
@@ -87,7 +86,33 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   const pendingUsd = (user?.pendingBalance || 0) * tokenPrice;
   
-  const pendingBalance = pendingUsd < 0.02 ? pendingUsd?.toFixed(4) : pendingUsd?.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+  const pendingBalance = pendingUsd < 0.02 ? pendingUsd?.toFixed(4) : pendingUsd?.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+
+  // Calculate today's yield farm earnings from yieldsRecord
+  const todayYieldFarmEarnings = useMemo(() => {
+    if (!user?.yieldsRecord || user.yieldsRecord.length === 0) {
+      return { amount: 0, usdValue: 0 };
+    }
+
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    
+    let totalBULLFIToday = 0;
+    
+    user.yieldsRecord.forEach((yield_) => {
+      const yieldDate = new Date(yield_.timestamp);
+      yieldDate.setUTCHours(0, 0, 0, 0);
+      
+      if (yieldDate.getTime() === today.getTime()) {
+        totalBULLFIToday += yield_.amount || 0;
+      }
+    });
+    
+    return {
+      amount: totalBULLFIToday,
+      usdValue: totalBULLFIToday * (prices.BULLFI || 0.01)
+    };
+  }, [user?.yieldsRecord, prices.BULLFI]);
 
   // Calculate faucet status with permanent unlock info
   const faucetStatus = useMemo(() => {
@@ -142,6 +167,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const todayEarnings = useMemo(() => {
     const ptcUsd = (dailyActivity?.ptcEarningsToday || 0) * tokenPrice;
     const offersUsd = (dailyActivity?.offerWallEarningsToday || 0) * tokenPrice;
+    const yieldFarmUsd = todayYieldFarmEarnings.usdValue;
     let faucetUsd = 0;
     
     if (dailyActivity?.faucetEarnings) {
@@ -152,15 +178,17 @@ const Dashboard: React.FC<DashboardProps> = ({
       faucetUsd += (dailyActivity.faucetEarnings.btcFaucetEarningsToday || 0) * bitcoinPrice;
     }
     
-    const totalUsd = ptcUsd + faucetUsd + offersUsd;
+    const totalUsd = ptcUsd + faucetUsd + offersUsd + yieldFarmUsd;
     
     return {
       ptc: dailyActivity?.ptcEarningsToday || 0,
       faucet: dailyActivity?.faucetEarningsToday || 0,
       offers: dailyActivity?.offerWallEarningsToday || 0,
+      yieldFarm: todayYieldFarmEarnings.amount,
       ptcUsd,
       faucetUsd,
       offersUsd,
+      yieldFarmUsd,
       totalUsd,
       faucetBreakdown: {
         bullfiUsd: (dailyActivity?.faucetEarnings?.bullfiFaucetEarningsToday || 0) * tokenPrice,
@@ -170,44 +198,44 @@ const Dashboard: React.FC<DashboardProps> = ({
         btcUsd: (dailyActivity?.faucetEarnings?.btcFaucetEarningsToday || 0) * bitcoinPrice,
       }
     };
-  }, [dailyActivity, tokenPrice, solanaPrice, ripplePrice, binancePrice, bitcoinPrice]);
+  }, [dailyActivity, tokenPrice, solanaPrice, ripplePrice, binancePrice, bitcoinPrice, todayYieldFarmEarnings]);
 
-const handleCoinClick = (coin: typeof COINS[0]) => {
-  const getMarketCapForCoin = () => {
-    if (coin.id === 'BULLFI') {
-      return marketCaps.BULLFI ? parseFloat(marketCaps.BULLFI as unknown as string) : null;
-    }
-    return marketCaps[coin.id] || null;
-  };
+  const handleCoinClick = (coin: typeof COINS[0]) => {
+    const getMarketCapForCoin = () => {
+      if (coin.id === 'BULLFI') {
+        return marketCaps.BULLFI ? parseFloat(marketCaps.BULLFI as unknown as string) : null;
+      }
+      return marketCaps[coin.id] || null;
+    };
 
-  // Helper to safely parse volume
-  const getVolumeForCoin = () => {
-    if (coin.id === 'BULLFI') {
-      return volumes.BULLFI ? parseFloat(volumes.BULLFI as unknown as string) : null;
-    }
-    return volumes[coin.id] || null;
-  };
+    // Helper to safely parse volume
+    const getVolumeForCoin = () => {
+      if (coin.id === 'BULLFI') {
+        return volumes.BULLFI ? parseFloat(volumes.BULLFI as unknown as string) : null;
+      }
+      return volumes[coin.id] || null;
+    };
 
-  const tokenData = {
-    id: coin.id,
-    name: coin.name,
-    ticker: coin.symbol,
-    image: coin.icon,
-    balance: (user as any)?.[getBalanceKey(coin.id)] || 0,
-    balanceUsd: ((user as any)?.[getBalanceKey(coin.id)] || 0) * (prices[coin.id] || 0),
-    price: prices[coin.id] || 0,
-    priceChangePercentage24h: priceChanges[coin.id],
-    marketCap: getMarketCapForCoin(),
-    tradingVolume24h: getVolumeForCoin(),
-    network: getNetworkForCoin(coin.id),
-    contractAddress: getContractAddress(coin.id),
-    websiteUrl: getWebsiteUrl(coin.id),
-    about: getAboutText(coin.id),
+    const tokenData = {
+      id: coin.id,
+      name: coin.name,
+      ticker: coin.symbol,
+      image: coin.icon,
+      balance: (user as any)?.[getBalanceKey(coin.id)] || 0,
+      balanceUsd: ((user as any)?.[getBalanceKey(coin.id)] || 0) * (prices[coin.id] || 0),
+      price: prices[coin.id] || 0,
+      priceChangePercentage24h: priceChanges[coin.id],
+      marketCap: getMarketCapForCoin(),
+      tradingVolume24h: getVolumeForCoin(),
+      network: getNetworkForCoin(coin.id),
+      contractAddress: getContractAddress(coin.id),
+      websiteUrl: getWebsiteUrl(coin.id),
+      about: getAboutText(coin.id),
+    };
+    
+    setSelectedToken(tokenData);
+    setIsTokenModalOpen(true);
   };
-  
-  setSelectedToken(tokenData);
-  setIsTokenModalOpen(true);
-};
 
   // Helper functions for token data
   const getNetworkForCoin = (coinId: string) => {
@@ -314,7 +342,7 @@ const handleCoinClick = (coin: typeof COINS[0]) => {
         >
           <p className="text-zinc-400 text-sm font-medium mb-1">Today's Earnings</p>
           <h3 className="text-4xl font-display font-bold text-emerald-400">${todayEarnings.totalUsd > 0.01 ? todayEarnings.totalUsd.toFixed(2) : todayEarnings.totalUsd === 0 ? 0 : todayEarnings.totalUsd.toFixed(4)}</h3>
-          <div className="mt-4 grid grid-cols-3 gap-2 text-[10px]">
+          <div className="mt-4 grid grid-cols-4 gap-1 text-[10px]">
             <div>
               <p className="text-zinc-500">PTC</p>
               <p className="font-mono font-bold text-bull-orange">${todayEarnings.ptcUsd > 0.01 ? todayEarnings.ptcUsd.toFixed(2) : todayEarnings.ptcUsd.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 4 })}</p>
@@ -326,6 +354,12 @@ const handleCoinClick = (coin: typeof COINS[0]) => {
             <div>
               <p className="text-zinc-500">Offers</p>
               <p className="font-mono font-bold text-blue-400">${todayEarnings.offersUsd > 0.01 ? todayEarnings.offersUsd.toFixed(2) : todayEarnings.offersUsd.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 4 })}</p>
+            </div>
+            <div>
+              <p className="text-zinc-500 flex items-center gap-0.5">
+                Farms
+              </p>
+              <p className="font-mono font-bold text-emerald-400">${todayEarnings.yieldFarmUsd > 0.01 ? todayEarnings.yieldFarmUsd.toFixed(2) : todayEarnings.yieldFarmUsd.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 4 })}</p>
             </div>
           </div>
         </motion.div>

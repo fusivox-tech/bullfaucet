@@ -38,11 +38,11 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="flex gap-2 items-center"
+            className="flex  flex-col gap-2 items-center"
           >
             <img
               src="https://res.cloudinary.com/danuehpic/image/upload/v1771869815/logo_tflaaq.png"
-              className="h-16 object-contain mb-8"
+              className="h-36 object-contain mb-8"
             />
             
             <div>

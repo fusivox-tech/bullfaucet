@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trophy, Sprout, Users, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Sprout, Users, ChevronRight, ChevronLeft, BadgeDollarSign } from 'lucide-react';
 
 interface Slide {
   title: string;
@@ -24,17 +24,17 @@ export const Welcome = ({ onLogin, onRegister }: { onLogin: () => void, onRegist
   
   const slides: IconSlide[] = [
     {
-      title: "Earn Premium Crypto",
-      description: "Complete tasks, PTC ads, and offers to earn BTC, BNB, SOL, XRP, and BULLFI directly to your wallet.",
-      icon: <Trophy className="w-20 h-20 text-bull-orange mb-6" />
+      title: "Earn Free Coins",
+      description: "View PTC ads, and complete offers to earn BTC, BNB, SOL, XRP, and BULLFI directly to your wallet.",
+      icon: <BadgeDollarSign className="w-20 h-20 text-bull-orange mb-6" />
     },
     {
       title: "Yield Farming",
-      description: "Stake your earned assets in our specialized farms to generate passive daily returns and grow your portfolio.",
+      description: "Stake your crypto assets in our specialized farms to generate passive daily returns and grow your portfolio.",
       icon: <Sprout className="w-20 h-20 text-emerald-400 mb-6" />
     },
     {
-      title: "Referral Program",
+      title: "Referral & Earn",
       description: "Invite friends and earn a massive 10% commission on all their faucet claims, PTC ads, and completed offers.",
       icon: <Users className="w-20 h-20 text-blue-400 mb-6" />
     }
