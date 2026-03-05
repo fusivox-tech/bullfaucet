@@ -601,7 +601,7 @@ const FaucetSection: React.FC<FaucetSectionProps> = ({
       <AnimatePresence>
         {showPrizeAnimation && wonAmount && (
           <motion.div 
-            className="fixed pointer-events-none z-50 text-4xl font-display font-bold"
+            className="fixed pointer-events-none z-50 text-xl font-display font-bold"
             style={{
               left: prizePosition.x,
               top: prizePosition.y,
