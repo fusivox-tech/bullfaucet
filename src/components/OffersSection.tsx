@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import { useData } from '../contexts/DataContext';
 import OfferDetailModal from './OfferDetailModal';
-import { SingleSurvey } from './SurveyDisplay';
 
 // Provider logo mapping for fallbacks - removed Featured
 const PROVIDER_LOGOS: Record<string, string> = {
@@ -93,8 +92,6 @@ const OffersSection: React.FC<OffersSectionProps> = ({ onComplete }) => {
   const [typeFilter, setTypeFilter] = useState('all');
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showTypeModal, setShowTypeModal] = useState(false);
-  const CPX_APP_ID = "27568";
-  const userId = localStorage.getItem('userId');
 
   // Track image errors per item
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
@@ -519,15 +516,6 @@ const filteredItems = useMemo(() => {
         </div>
       </div>
       
-      <div style={{ display: "none", flexWrap: 'wrap' }}>
-        <div style={{ width: '48%', marginRight: '2%' }}>
-          <SingleSurvey appId={CPX_APP_ID} userId={userId} />
-        </div>
-        <div style={{ width: '48%' }}>
-          <SingleSurvey appId={CPX_APP_ID} userId={userId} />
-        </div>
-      </div>
-
       {/* Controls */}
       <div className="flex flex-wrap gap-3 justify-between items-center">
         <div className="flex gap-2">

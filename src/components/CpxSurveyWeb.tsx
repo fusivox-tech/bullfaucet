@@ -8,7 +8,7 @@ interface CpxSurveyWebProps {
   onLoad?: () => void;
 }
 
-const CpxSurveyWeb = ({ appId, userId, surveyStyle = 1, onLoad }: CpxSurveyWebProps) => {
+const CpxSurveyWeb = ({ appId, userId, surveyStyle = 3 }: CpxSurveyWebProps) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [iframeHeight] = useState<number>(surveyStyle === 1 ? 400 : 200);
   const [htmlContent, setHtmlContent] = useState<string>('');
@@ -114,12 +114,6 @@ const CpxSurveyWeb = ({ appId, userId, surveyStyle = 1, onLoad }: CpxSurveyWebPr
     setHtmlContent(generateHTML());
   }, [appId, userId, surveyStyle]);
 
-  const handleIframeLoad = (): void => {
-    if (onLoad) {
-      onLoad();
-    }
-  };
-
   const handleIframeError = (): void => {
     console.error('Failed to load iframe');
   };
@@ -131,7 +125,6 @@ const CpxSurveyWeb = ({ appId, userId, surveyStyle = 1, onLoad }: CpxSurveyWebPr
         srcDoc={htmlContent}
         style={{ width: '100%', height: '100%', border: 'none' }}
         title="CPX Surveys"
-        onLoad={handleIframeLoad}
         onError={handleIframeError}
         sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
       />

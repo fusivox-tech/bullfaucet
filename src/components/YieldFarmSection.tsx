@@ -1,5 +1,3 @@
-// components/YieldFarmSection.tsx
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Sprout, Info, X, CheckCircle, AlertCircle, ChevronDown, Wallet, ArrowDownCircle, Calendar, TrendingUp, Clock } from 'lucide-react';
 import { User, COINS, YieldFarm } from '../types';
@@ -139,6 +137,8 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
   const [showPlantModal, setShowPlantModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showYieldsHistoryModal, setShowYieldsHistoryModal] = useState(false);
+  const [showHarvestModal, setShowHarvestModal] = useState(false);
+  const [selectedFarmForHarvest, setSelectedFarmForHarvest] = useState<YieldFarm | null>(null);
   const [plantAmount, setPlantAmount] = useState('');
   const [selectedCoin, setSelectedCoin] = useState('BULLFI');
   const [showTokenDropdown, setShowTokenDropdown] = useState(false);
@@ -317,16 +317,25 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
     setSelectedTier(null);
   };
 
-  const handleHarvestClick = async (farmId: string) => {
+  const handleHarvestClick = (farm: YieldFarm) => {
+    setSelectedFarmForHarvest(farm);
+    setShowHarvestModal(true);
+  };
 
-    setHarvestingFarmId(farmId);
+  const handleConfirmHarvest = async () => {
+    if (!selectedFarmForHarvest) return;
+    
+    setHarvestingFarmId(selectedFarmForHarvest._id);
+    setShowHarvestModal(false);
+    
     try {
-      await onHarvest(farmId);
+      await onHarvest(selectedFarmForHarvest._id);
       await fetchActiveFarms(); // Refresh farms after harvest
     } catch (error) {
       console.error('Error harvesting farm:', error);
     } finally {
       setHarvestingFarmId(null);
+      setSelectedFarmForHarvest(null);
     }
   };
 
@@ -547,7 +556,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
 
                     {isLockPeriodOver && (
                       <button
-                        onClick={() => handleHarvestClick(farm._id)}
+                        onClick={() => handleHarvestClick(farm)}
                         disabled={isHarvesting}
                         className={`px-6 py-3 rounded-xl font-bold transition-all ${
                           isHarvesting
@@ -790,7 +799,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
           onClick={() => setShowPlantModal(false)}
         >
           <div 
-            className="w-full rounded-3xl glass border border-white/10 p-6"
+            className="w-full max-w-md rounded-3xl glass border border-white/10 p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
@@ -992,6 +1001,134 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
         </div>
       )}
 
+      {/* Harvest Confirmation Modal */}
+      {showHarvestModal && selectedFarmForHarvest && (
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => {
+            setShowHarvestModal(false);
+            setSelectedFarmForHarvest(null);
+          }}
+        >
+          <div 
+            className="w-full max-w-md rounded-3xl glass border border-white/10 p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-display font-bold text-emerald-400">Harvest Farm</h3>
+              <button
+                onClick={() => {
+                  setShowHarvestModal(false);
+                  setSelectedFarmForHarvest(null);
+                }}
+                className="w-8 h-8 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-all"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* Farm Info */}
+              <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                <div className="flex items-center gap-3 mb-3">
+                  <img 
+                    src={tokens.find(t => t.symbol === selectedFarmForHarvest.token)?.image} 
+                    alt={selectedFarmForHarvest.token}
+                    className="w-10 h-10 object-contain"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div>
+                    <p className="font-bold text-lg">
+                      {selectedFarmForHarvest.token} {YIELD_TIERS.find(t => t.id === selectedFarmForHarvest.tierId)?.name || selectedFarmForHarvest.tierName} Farm
+                    </p>
+                    <p className="text-sm text-zinc-400">
+                      Locked: {selectedFarmForHarvest.token === 'BTC' 
+                        ? selectedFarmForHarvest.amount.toFixed(8) 
+                        : selectedFarmForHarvest.token === 'BULLFI' 
+                          ? Math.round(selectedFarmForHarvest.amount).toLocaleString()
+                          : selectedFarmForHarvest.amount.toFixed(4)} {selectedFarmForHarvest.token}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Important Information */}
+              <div className="space-y-4">
+                <div className="flex items-start gap-3 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                  <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                    <Wallet size={16} className="text-blue-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-blue-400">Principal Return</p>
+                    <p className="text-xs text-zinc-400">
+                      Your locked principal of{' '}
+                      <span className="text-white font-bold">
+                        {selectedFarmForHarvest.token === 'BTC' 
+                          ? selectedFarmForHarvest.amount.toFixed(8) 
+                          : selectedFarmForHarvest.token === 'BULLFI' 
+                            ? Math.round(selectedFarmForHarvest.amount).toLocaleString()
+                            : selectedFarmForHarvest.amount.toFixed(4)} {selectedFarmForHarvest.token}
+                      </span>
+                      {' '}will be returned to your balance.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
+                  <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+                    <TrendingUp size={16} className="text-orange-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-orange-400">Daily Yields Will Stop</p>
+                    <p className="text-xs text-zinc-400">
+                      After harvesting, this farm will no longer earn daily yields. Make sure you've collected all desired yield payments.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Yield Summary */}
+              {selectedFarmForHarvest.totalYieldReceived && selectedFarmForHarvest.totalYieldReceived > 0 && (
+                <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                  <p className="text-xs text-zinc-400 mb-1">Total Yield Earned from this Farm</p>
+                  <p className="text-2xl font-display font-bold text-emerald-400">
+                    ${((selectedFarmForHarvest.totalYieldReceived || 0) * (prices.BULLFI || 0.01)).toFixed(2)}
+                  </p>
+                  <p className="text-xs text-zinc-500">
+                    {(Math.round(selectedFarmForHarvest.totalYieldReceived || 0)).toLocaleString()} BULLFI
+                  </p>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => {
+                    setShowHarvestModal(false);
+                    setSelectedFarmForHarvest(null);
+                  }}
+                  className="flex-1 py-3 rounded-xl glass border border-white/10 font-bold hover:bg-white/5 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmHarvest}
+                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-emerald-500/20"
+                >
+                  Confirm Harvest
+                </button>
+              </div>
+
+              {/* Warning */}
+              <p className="text-[10px] text-zinc-500 text-center">
+                <AlertCircle size={12} className="inline mr-1" />
+                This action cannot be undone. Once harvested, the farm will be closed and yields will stop.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Yields History Modal */}
       {showYieldsHistoryModal && (
         <div 
@@ -999,7 +1136,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
           onClick={() => setShowYieldsHistoryModal(false)}
         >
           <div 
-            className="w-full rounded-3xl glass border border-white/10 p-6 max-h-[90vh] overflow-y-auto scrollbar-hide pt-0"
+            className="w-full max-w-2xl rounded-3xl glass border border-white/10 p-6 max-h-[90vh] overflow-y-auto scrollbar-hide pt-0"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between sticky top-0 bg-[#20242a] backdrop-blur-sm -m-6 p-6 border-b border-white/5 mb-12">
@@ -1066,7 +1203,7 @@ const YieldFarmSection: React.FC<YieldFarmSectionProps> = ({ user, farms, onLock
           onClick={() => setShowInfoModal(false)}
         >
           <div 
-            className="w-full rounded-3xl glass border border-white/10 p-6 max-h-[80vh] overflow-y-auto pt-0"
+            className="w-full max-w-2xl rounded-3xl glass border border-white/10 p-6 max-h-[80vh] overflow-y-auto pt-0"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6 sticky top-0 bg-[#20242a] backdrop-blur-sm -m-6 p-6 border-b border-white/5">

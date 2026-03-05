@@ -14,7 +14,7 @@ export const FullContentSurvey = ({ appId, userId, onSurveyLoad }: SurveyProps) 
     </h3>
     <CpxSurveyWeb 
       appId={appId} 
-      userId={userId || ''} 
+      userId={userId} 
       surveyStyle={1} 
       onLoad={onSurveyLoad} 
     />
@@ -25,7 +25,7 @@ export const SidebarSurvey = ({ appId, userId, onSurveyLoad }: SurveyProps) => (
   <div style={{ height: 200, margin: 10 }}>
     <CpxSurveyWeb 
       appId={appId} 
-      userId={userId || ''} 
+      userId={userId} 
       surveyStyle={2} 
       onLoad={onSurveyLoad} 
     />
@@ -36,7 +36,7 @@ export const SingleSurvey = ({ appId, userId, onSurveyLoad }: SurveyProps) => (
   <div style={{ height: 100, margin: 10 }}>
     <CpxSurveyWeb 
       appId={appId} 
-      userId={userId || ''} 
+      userId={userId} 
       surveyStyle={3} 
       onLoad={onSurveyLoad} 
     />

@@ -27,6 +27,7 @@ import NotificationPrompt from './components/NotificationPrompt'
 import Notifications from './components/Notifications';
 import MyAds from './components/MyAds';
 import LoadingScreen from './components/LoadingScreen';
+import { SingleSurvey } from './components/SurveyDisplay';
 
 function AppContent() {
   const {
@@ -93,6 +94,8 @@ function AppContent() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isDataLoading, setIsDataLoading] = useState(true);
+  const CPX_APP_ID = "27568";
+  const userId = localStorage.getItem('userId');
   
   // Get current active tab from path
   const activeTab = location.pathname.slice(1) || 'dashboard';
@@ -209,6 +212,11 @@ function AppContent() {
       ref={appRef} 
       className="min-h-screen bg-bull-dark selection:bg-bull-orange/30 md:pt-13"
     >
+      <div style={{ display: "none", flexWrap: 'wrap' }}>
+        <div style={{ width: '100%' }}>
+          <SingleSurvey appId={CPX_APP_ID} userId={userId} />
+        </div>
+      </div>
       <CustomAlert />
       <NotificationPrompt 
         isVisible={isNotificationPromptVisible}

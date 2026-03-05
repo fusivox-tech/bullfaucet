@@ -24,7 +24,8 @@ interface UseCpxSurveysReturn {
   iframeLoaded: boolean;
 }
 
-export const useCpxSurveys = (appId: string | null, userId: string | null): UseCpxSurveysReturn => {
+// Make parameters optional to match JavaScript version
+export const useCpxSurveys = (): UseCpxSurveysReturn => {
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -87,17 +88,6 @@ export const useCpxSurveys = (appId: string | null, userId: string | null): UseC
       window.removeEventListener('message', handleMessage);
     };
   }, [handleMessage]);
-
-  // Optional: Use appId and userId to initialize or fetch surveys
-  useEffect(() => {
-    if (appId && userId) {
-      // You might want to initialize or log something here
-      console.log(`Initializing CPX surveys for app ${appId} and user ${userId}`);
-      
-      // If you need to make an initial API call, do it here
-      // fetchInitialSurveys(appId, userId);
-    }
-  }, [appId, userId]);
 
   const refreshSurveys = (): void => {
     setLoading(true);

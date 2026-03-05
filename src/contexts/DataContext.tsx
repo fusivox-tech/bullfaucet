@@ -335,11 +335,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [featuredOffers, setFeaturedOffers] = useState<any[]>([]);
   const [featuredOffersLoading, setFeaturedOffersLoading] = useState(true);
   const [featuredOffersError, setFeaturedOffersError] = useState<string | null>(null);
-  
-  const appId = '27568';
+
   const userId = localStorage.getItem('userId');
   
-  const { surveys, cpxLoading } = useCpxSurveys(appId, userId);
+  const { surveys, cpxLoading } = useCpxSurveys();
   
   const [bitlabsSurveys, setBitlabsSurveys] = useState<any[]>([]);
   const [bitlabsSurveyLoading, setBitlabsSurveyLoading] = useState(true);
