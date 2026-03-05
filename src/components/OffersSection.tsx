@@ -73,11 +73,6 @@ const OffersSection: React.FC<OffersSectionProps> = ({ onComplete }) => {
     cpxLoading,
     bitlabsSurveys,
     bitlabsSurveyLoading,
-    fetchBitlabsOffers,
-    fetchNotikOffers,
-    fetchWannadsOffers,
-    fetchAdscendOffers,
-    fetchBitLabsSurveys,
     setBitlabsLoading,
     setNotikLoading,
     setWannadsLoading,
@@ -441,15 +436,6 @@ const filteredItems = useMemo(() => {
       setLoadingTimeout(false);
     }
   }, [bitlabsLoading, notikLoading, wannadsLoading, adscendLoading, cpxLoading, bitlabsSurveyLoading]);
-
-  // Fetch data on mount - removed fetchFeaturedOffers
-  useEffect(() => {
-    fetchBitlabsOffers();
-    fetchNotikOffers();
-    fetchWannadsOffers();
-    fetchAdscendOffers();
-    fetchBitLabsSurveys();
-  }, []);
 
   const handleOfferClick = (item: any) => {
     setSelectedOffer(item);

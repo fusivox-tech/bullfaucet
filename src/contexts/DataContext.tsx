@@ -1220,7 +1220,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsCheckingAuth(false);
   }, [checkAuth]);
 
-  // Fetch Data When Authenticated
   useEffect(() => {
     if (isAuthenticated) {
       fetchUserData();
