@@ -42,7 +42,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
           >
             <img
               src="https://res.cloudinary.com/danuehpic/image/upload/v1771869815/logo_tflaaq.png"
-              className="h-36 object-contain mb-8"
+              className="hidden h-36 object-contain mb-8"
             />
             
             <div>
@@ -65,7 +65,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="mt-[-5px] text-zinc-400 font-medium text-left text-[10px] flex items-center justify-between"
+            className="hidden mt-[-5px] text-zinc-400 font-medium text-left text-[10px] flex items-center justify-between"
           >
             <span>Loading...</span>{message}
           </motion.p>
