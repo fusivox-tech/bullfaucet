@@ -112,9 +112,16 @@ const Navbar: React.FC<NavbarProps> = ({
           <div className="flex items-center gap-2">
             <img 
               onClick={handleLogoClick}
-              src="https://res.cloudinary.com/danuehpic/image/upload/v1771869182/wordmark_pynw6f.png" 
-              alt="BullFaucet Wordmark" 
+              src="https://res.cloudinary.com/danuehpic/image/upload/v1771869815/logo_tflaaq.png" 
+              alt="BullFaucet Logo" 
               className="h-8 object-contain cursor-pointer" 
+              referrerPolicy="no-referrer" 
+            />
+            <img 
+              onClick={handleLogoClick}
+              src="https://res.cloudinary.com/danuehpic/image/upload/v1772546097/justword_qjbquu.png"
+              alt="BullFaucet Wordmark" 
+              className="h-4 object-contain cursor-pointer" 
               referrerPolicy="no-referrer" 
             />
           </div>
