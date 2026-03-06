@@ -28,6 +28,8 @@ import Notifications from './components/Notifications';
 import MyAds from './components/MyAds';
 import LoadingScreen from './components/LoadingScreen';
 import { SingleSurvey } from './components/SurveyDisplay';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import TermsOfService from './components/TermsOfService';
 
 function AppContent() {
   const {
@@ -210,7 +212,7 @@ function AppContent() {
   return (
     <div 
       ref={appRef} 
-      className="min-h-screen bg-bull-dark selection:bg-bull-orange/30 md:pt-13"
+      className="min-h-screen bg-bull-dark selection:bg-bull-orange/30 md:pt-13 scrollbar-hide scroll-smooth"
     >
       <div style={{ display: "none", flexWrap: 'wrap' }}>
         <div style={{ width: '100%' }}>
@@ -398,6 +400,8 @@ export default function App() {
     <Router>
       <Routes>
         <Route path="/iframe-task" element={<FullscreenIframe />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
         <Route path="/*" element={<AppContent />} />
       </Routes>
     </Router>
