@@ -345,7 +345,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [bitLabsSurveyError, setBitLabsSurveyError] = useState<string | null>(null);
   
   // Token Price States
-  const [tokenPrice, setTokenPrice] = useState(0.01);
+  const [tokenPrice, setTokenPrice] = useState(0);
   const [bitcoinPrice, setBitcoinPrice] = useState(0);
   const [solanaPrice, setSolanaPrice] = useState(0);
   const [binancePrice, setBinancePrice] = useState(0);

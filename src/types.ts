@@ -266,10 +266,10 @@ export const COINS = [
 
 export const UNLOCK_CONDITIONS: Record<string, { ads: number; usd: number }> = {
   BULLFI: { ads: 10, usd: 2 },
-  SOL: { ads: 20, usd: 5 },
-  XRP: { ads: 30, usd: 10 },
-  BNB: { ads: 50, usd: 25 },
-  BTC: { ads: 100, usd: 100 },
+  SOL: { ads: 30, usd: 5 },
+  XRP: { ads: 50, usd: 10 },
+  BNB: { ads: 75, usd: 20 },
+  BTC: { ads: 100, usd: 50 },
 };
 
 export const createFaucetTokens = (
