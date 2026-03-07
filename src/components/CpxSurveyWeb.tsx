@@ -41,7 +41,7 @@ const CpxSurveyWeb = ({ appId, userId, surveyStyle = 3 }: CpxSurveyWebProps) => 
             const config = {
               general_config: {
                 app_id: ${appId},
-                ext_user_id: "${userId || ''}",
+                ext_user_id: "${userId}",
                 email: "",
                 username: "",
                 secure_hash: "",
@@ -66,19 +66,19 @@ const CpxSurveyWeb = ({ appId, userId, surveyStyle = 3 }: CpxSurveyWebProps) => 
                     type: 'no_surveys'
                   }), "*");
                 },
-                count_new_surveys: (count: number) => {
+                count_new_surveys: (count) => {
                   window.parent.postMessage(JSON.stringify({
                     type: 'survey_count',
                     count: count
                   }), "*");
                 },
-                get_all_surveys: (surveys: any[]) => {
+                get_all_surveys: (surveys) => {
                   window.parent.postMessage(JSON.stringify({
                     type: 'all_surveys',
                     surveys: surveys
                   }), "*");
                 },
-                get_transaction: (transactions: any) => {
+                get_transaction: (transactions) => {
                   window.parent.postMessage(JSON.stringify({
                     type: 'transaction',
                     transactions: transactions
