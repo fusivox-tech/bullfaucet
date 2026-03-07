@@ -351,75 +351,107 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [binancePrice, setBinancePrice] = useState(0);
   const [ripplePrice, setRipplePrice] = useState(0);
   
-  const faucetTokens: FaucetToken[] = useMemo(() => [
-    {
-      id: 'BULLFI',
-      name: 'BullFaucet Coin',
-      ticker: 'BULLFI',
-      image: 'https://res.cloudinary.com/danuehpic/image/upload/v1771869815/logo_tflaaq.png',
-      color: '#e36a0d',
-      dailyPtcRequirement: 10,
-      permanentUnlockRequirement: 2,
-      multiplier: tokenPrice,
-      price: tokenPrice,
-      network: 'Solana',
-      timestampField: 'lastBULLFIClaim'
-    },
-    {
-      id: 'SOL',
-      name: 'Solana',
-      ticker: 'SOL',
-      image: 'https://res.cloudinary.com/danuehpic/image/upload/v1771869814/sol_bdocle.png',
-      color: '#9333ea',
-      dailyPtcRequirement: 30,
-      permanentUnlockRequirement: 5,
-      multiplier: solanaPrice,
-      price: solanaPrice,
-      network: 'Solana',
-      timestampField: 'lastSOLClaim'
-    },
-    {
-      id: 'XRP',
-      name: 'Ripple',
-      ticker: 'XRP',
-      image: 'https://res.cloudinary.com/danuehpic/image/upload/v1771869815/xrp_uhhwwx.png',
-      color: '#60a5fa',
-      dailyPtcRequirement: 50,
-      permanentUnlockRequirement: 10,
-      multiplier: ripplePrice,
-      price: ripplePrice,
-      network: 'Ripple',
-      timestampField: 'lastXRPClaim'
-    },
-    {
-      id: 'BNB',
-      name: 'Binance Coin',
-      ticker: 'BNB',
-      image: 'https://res.cloudinary.com/danuehpic/image/upload/v1771869814/bnb_jrwljy.png',
-      color: '#eab308',
-      dailyPtcRequirement: 75,
-      permanentUnlockRequirement: 20,
-      multiplier: binancePrice,
-      price: binancePrice,
-      network: 'BEP20',
-      timestampField: 'lastBNBClaim'
-    },
-    {
-      id: 'BTC',
-      name: 'Bitcoin',
-      ticker: 'BTC',
-      image: 'https://res.cloudinary.com/danuehpic/image/upload/v1771869814/bitcoin_lhzjiu.png',
-      color: '#fb923c',
-      dailyPtcRequirement: 100,
-      permanentUnlockRequirement: 50,
-      multiplier: bitcoinPrice,
-      price: bitcoinPrice,
-      network: 'Bitcoin',
-      timestampField: 'lastBTCClaim'
+  // In DataContext.tsx, update the faucetTokens definition and add an effect
+
+// Memoize faucetTokens to prevent unnecessary recreations
+const faucetTokens: FaucetToken[] = useMemo(() => [
+  {
+    id: 'BULLFI',
+    name: 'BullFaucet Coin',
+    ticker: 'BULLFI',
+    image: 'https://res.cloudinary.com/danuehpic/image/upload/v1771869815/logo_tflaaq.png',
+    color: '#e36a0d',
+    dailyPtcRequirement: 10,
+    permanentUnlockRequirement: 2,
+    multiplier: tokenPrice,
+    price: tokenPrice,
+    network: 'Solana',
+    timestampField: 'lastBULLFIClaim'
+  },
+  {
+    id: 'SOL',
+    name: 'Solana',
+    ticker: 'SOL',
+    image: 'https://res.cloudinary.com/danuehpic/image/upload/v1771869814/sol_bdocle.png',
+    color: '#9333ea',
+    dailyPtcRequirement: 30,
+    permanentUnlockRequirement: 5,
+    multiplier: solanaPrice,
+    price: solanaPrice,
+    network: 'Solana',
+    timestampField: 'lastSOLClaim'
+  },
+  {
+    id: 'XRP',
+    name: 'Ripple',
+    ticker: 'XRP',
+    image: 'https://res.cloudinary.com/danuehpic/image/upload/v1771869815/xrp_uhhwwx.png',
+    color: '#60a5fa',
+    dailyPtcRequirement: 50,
+    permanentUnlockRequirement: 10,
+    multiplier: ripplePrice,
+    price: ripplePrice,
+    network: 'Ripple',
+    timestampField: 'lastXRPClaim'
+  },
+  {
+    id: 'BNB',
+    name: 'Binance Coin',
+    ticker: 'BNB',
+    image: 'https://res.cloudinary.com/danuehpic/image/upload/v1771869814/bnb_jrwljy.png',
+    color: '#eab308',
+    dailyPtcRequirement: 75,
+    permanentUnlockRequirement: 20,
+    multiplier: binancePrice,
+    price: binancePrice,
+    network: 'BEP20',
+    timestampField: 'lastBNBClaim'
+  },
+  {
+    id: 'BTC',
+    name: 'Bitcoin',
+    ticker: 'BTC',
+    image: 'https://res.cloudinary.com/danuehpic/image/upload/v1771869814/bitcoin_lhzjiu.png',
+    color: '#fb923c',
+    dailyPtcRequirement: 100,
+    permanentUnlockRequirement: 50,
+    multiplier: bitcoinPrice,
+    price: bitcoinPrice,
+    network: 'Bitcoin',
+    timestampField: 'lastBTCClaim'
+  }
+], [tokenPrice, solanaPrice, bitcoinPrice, binancePrice, ripplePrice]);
+
+// Initialize selected token with a default
+const [selectedFaucetToken, setSelectedFaucetToken] = useState<FaucetToken>(() => {
+  // Try to get from localStorage first
+  const saved = localStorage.getItem('selectedFaucetToken');
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch {
+      return faucetTokens[0];
     }
-  ], [tokenPrice, solanaPrice, bitcoinPrice, binancePrice, ripplePrice]);
-  
-  const [selectedFaucetToken, setSelectedFaucetToken] = useState<FaucetToken>(faucetTokens[0]);
+  }
+  return faucetTokens[0];
+});
+
+// Update selected token when prices change to ensure it has latest price
+useEffect(() => {
+  if (selectedFaucetToken) {
+    const latestToken = faucetTokens.find(t => t.id === selectedFaucetToken.id);
+    if (latestToken && latestToken.price !== selectedFaucetToken.price) {
+      setSelectedFaucetToken(latestToken);
+    }
+  }
+}, [tokenPrice, solanaPrice, bitcoinPrice, binancePrice, ripplePrice]);
+
+// Save to localStorage when selected token changes
+useEffect(() => {
+  if (selectedFaucetToken) {
+    localStorage.setItem('selectedFaucetToken', JSON.stringify(selectedFaucetToken));
+  }
+}, [selectedFaucetToken]);
 
   const prices: Record<string, number> = {
     BULLFI: tokenPrice,

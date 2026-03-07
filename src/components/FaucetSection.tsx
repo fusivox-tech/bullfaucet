@@ -177,6 +177,15 @@ const FaucetSection: React.FC<FaucetSectionProps> = ({
   };
 }, [dailyActivity, tokenPrice, solanaPrice, ripplePrice, binancePrice, bitcoinPrice]);
 
+// Add this effect to keep selected token in sync with latest price data
+useEffect(() => {
+  // Find the latest version of the selected token from faucetTokens
+  const latestToken = faucetTokens.find(t => t.id === selectedToken.id);
+  if (latestToken && latestToken.price !== selectedToken.price) {
+    setSelectedToken(latestToken);
+  }
+}, [tokenPrice, solanaPrice, bitcoinPrice, binancePrice, ripplePrice, selectedToken.id]);
+
   // Get today's PTC count from dailyActivity (more reliable than user.ads_completed_today)
   const ptcToday = useMemo(() => {
     return dailyActivity?.ptcToday || user?.ads_completed_today || 0;
@@ -568,7 +577,7 @@ const FaucetSection: React.FC<FaucetSectionProps> = ({
                   <span className={`font-mono font-bold ${index === 5 ? 'text-bull-orange' : ''}`}>
                     {selectedToken.ticker === 'BULLFI' 
                       ? Math.round(tokenAmount).toLocaleString() 
-                      : tokenAmount.toFixed(selectedToken.ticker === 'BTC' ? 10 : selectedToken.ticker === "BULLFI" ? 0 : 8)} {selectedToken.ticker}
+                      : tokenAmount.toFixed(selectedToken.ticker === 'BTC' ? 10 : 8)} {selectedToken.ticker}
                   </span>
                 </div>
               );
