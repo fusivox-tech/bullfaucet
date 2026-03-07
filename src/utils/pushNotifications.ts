@@ -67,7 +67,7 @@ export async function registerPushNotifications(userId: string): Promise<boolean
 
     // Send subscription to server
     const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE_URL}/notifications/subscribe`, {
+    const response = await fetch(`${API_BASE_URL}/notifications/subscribe-user`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
